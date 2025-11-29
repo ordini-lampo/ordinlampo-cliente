@@ -141,11 +141,13 @@ function TimeSlot({
         Seleziona la fascia oraria preferita
       </p>
       
-      {/* Disclaimer */}
-      <div className="p-3 bg-yellow-50 rounded-xl mb-6 text-sm text-yellow-700">
+      {/* FIX: Disclaimer migliorato con tolleranza ±20 min */}
+      <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl mb-6 text-sm text-blue-800 flex gap-3">
+        <span className="text-2xl">ℹ️</span>
         <p>
-          ⚠️ Si adotterà ogni sforzo per soddisfare la richiesta. 
-          Tuttavia eventuali ritardi non imputabili al ristoratore potrebbero sporadicamente verificarsi.
+          L'orario selezionato è indicativo.<br/>
+          <strong>Tolleranza prevista: ±20 minuti.</strong><br/>
+          In caso di maltempo o traffico intenso, i tempi potrebbero allungarsi. Grazie per la comprensione! 
         </p>
       </div>
 

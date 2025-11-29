@@ -1,5 +1,28 @@
 import { useState } from 'react'
 
+// FIX: Componente spostato FUORI per evitare perdita di focus
+const InputField = ({ label, field, value, onChange, error, type = 'text', placeholder, required = true }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      value={value || ''}
+      onChange={(e) => onChange(field, e.target.value)}
+      placeholder={placeholder}
+      className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+        error 
+          ? 'border-red-500 focus:border-red-500' 
+          : 'border-gray-200 focus:border-orange-500'
+      }`}
+    />
+    {error && (
+      <p className="mt-1 text-sm text-red-500">{error}</p>
+    )}
+  </div>
+)
+
 function CustomerData({ 
   orderType,
   locations,
@@ -11,50 +34,35 @@ function CustomerData({
   const [errors, setErrors] = useState({})
 
   const updateField = (field, value) => {
-    setCustomerData({ ...customerData, [field]: value })
-    // Rimuovi errore quando l'utente digita
+    setCustomerData(prev => ({ ...prev, [field]: value }))
     if (errors[field]) {
-      setErrors({ ...errors, [field]: null })
+      setErrors(prev => ({ ...prev, [field]: null }))
     }
   }
 
   const validatePhone = (phone) => {
     const cleaned = phone.replace(/\D/g, '')
-    if (cleaned.length < 10 || cleaned.length > 12) return false
-    if (!cleaned.startsWith('3')) return false
-    return true
+    if (cleaned.length < 10 || cleaned.length > 13) return false
+    return true 
   }
 
   const validate = () => {
     const newErrors = {}
     
-    if (!customerData.name?.trim()) {
-      newErrors.name = 'Inserisci il nome'
-    }
-    
-    if (!customerData.surname?.trim()) {
-      newErrors.surname = 'Inserisci il cognome'
-    }
+    if (!customerData.name?.trim()) newErrors.name = 'Inserisci il nome'
+    if (!customerData.surname?.trim()) newErrors.surname = 'Inserisci il cognome'
     
     if (!customerData.phone?.trim()) {
       newErrors.phone = 'Inserisci il numero di telefono'
     } else if (!validatePhone(customerData.phone)) {
-      newErrors.phone = 'Numero non valido (10-12 cifre, inizia con 3)'
+      newErrors.phone = 'Numero non valido'
     }
     
     if (orderType === 'delivery') {
-      if (!customerData.address?.trim()) {
-        newErrors.address = 'Inserisci la via'
-      }
-      if (!customerData.civic?.trim()) {
-        newErrors.civic = 'Inserisci il numero civico'
-      }
-      if (!customerData.city?.trim()) {
-        newErrors.city = 'Seleziona la città'
-      }
-      if (!customerData.doorbell?.trim()) {
-        newErrors.doorbell = 'Inserisci il nome sul citofono'
-      }
+      if (!customerData.address?.trim()) newErrors.address = 'Inserisci la via'
+      if (!customerData.civic?.trim()) newErrors.civic = 'Inserisci il numero civico'
+      if (!customerData.city?.trim()) newErrors.city = 'Seleziona la città'
+      if (!customerData.doorbell?.trim()) newErrors.doorbell = 'Inserisci il nome sul citofono'
     }
     
     setErrors(newErrors)
@@ -69,8 +77,8 @@ function CustomerData({
 
   const loadPreviousData = () => {
     if (previousCustomer) {
-      setCustomerData({
-        ...customerData,
+      setCustomerData(prev => ({
+        ...prev,
         name: previousCustomer.name || '',
         surname: previousCustomer.surname || '',
         phone: previousCustomer.phone || '',
@@ -78,31 +86,9 @@ function CustomerData({
         civic: previousCustomer.default_civic || '',
         city: previousCustomer.default_city || '',
         doorbell: previousCustomer.default_doorbell || '',
-      })
+      }))
     }
   }
-
-  const InputField = ({ label, field, type = 'text', placeholder, required = true }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        value={customerData[field] || ''}
-        onChange={(e) => updateField(field, e.target.value)}
-        placeholder={placeholder}
-        className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
-          errors[field] 
-            ? 'border-red-500 focus:border-red-500' 
-            : 'border-gray-200 focus:border-orange-500'
-        }`}
-      />
-      {errors[field] && (
-        <p className="mt-1 text-sm text-red-500">{errors[field]}</p>
-      )}
-    </div>
-  )
 
   return (
     <div className="p-6 animate-fadeIn">
@@ -115,51 +101,63 @@ function CustomerData({
           : 'Come ti chiamiamo quando è pronto?'}
       </p>
 
-      {/* Carica dati precedenti */}
       {previousCustomer && (
         <button
           onClick={loadPreviousData}
-          className="w-full p-3 mb-6 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-100 transition-colors"
+          className="w-full p-3 mb-6 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-200"
         >
           📋 Usa i dati dell'ultimo ordine
         </button>
       )}
 
-      {/* Campi comuni */}
       <div className="grid grid-cols-2 gap-3">
         <InputField 
           label="Nome" 
           field="name" 
+          value={customerData.name}
+          onChange={updateField}
+          error={errors.name}
           placeholder="Mario" 
         />
         <InputField 
           label="Cognome" 
           field="surname" 
+          value={customerData.surname}
+          onChange={updateField}
+          error={errors.surname}
           placeholder="Rossi" 
         />
       </div>
 
       <InputField 
-        label="Telefono" 
+        label="Telefono (WhatsApp)" 
         field="phone" 
         type="tel"
+        value={customerData.phone}
+        onChange={updateField}
+        error={errors.phone}
         placeholder="333 1234567" 
       />
 
-      {/* Campi consegna */}
       {orderType === 'delivery' && (
         <>
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <InputField 
-                label="Via" 
+                label="Via/Piazza" 
                 field="address" 
+                value={customerData.address}
+                onChange={updateField}
+                error={errors.address}
                 placeholder="Via Roma" 
               />
             </div>
             <InputField 
               label="N°" 
               field="civic" 
+              value={customerData.civic}
+              onChange={updateField}
+              error={errors.civic}
               placeholder="25" 
             />
           </div>
@@ -171,7 +169,7 @@ function CustomerData({
             <select
               value={customerData.city || ''}
               onChange={(e) => updateField('city', e.target.value)}
-              className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors ${
+              className={`w-full p-3 border-2 rounded-xl focus:outline-none transition-colors bg-white ${
                 errors.city 
                   ? 'border-red-500 focus:border-red-500' 
                   : 'border-gray-200 focus:border-orange-500'
@@ -190,12 +188,15 @@ function CustomerData({
           <InputField 
             label="Nome sul citofono" 
             field="doorbell" 
+            value={customerData.doorbell}
+            onChange={updateField}
+            error={errors.doorbell}
             placeholder="Es: Rossi M." 
           />
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note per il rider
+              Note per il rider (Opzionale)
             </label>
             <input
               type="text"
@@ -208,10 +209,9 @@ function CustomerData({
         </>
       )}
 
-      {/* Note ordine */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Note per l'ordine
+          Note per l'ordine (Opzionale)
         </label>
         <textarea
           value={customerData.notesOrder || ''}
@@ -224,7 +224,7 @@ function CustomerData({
 
       <button
         onClick={handleNext}
-        className="w-full mt-4 py-4 rounded-xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 transition-all"
+        className="w-full mt-4 py-4 rounded-xl font-bold text-lg bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-md"
       >
         Continua →
       </button>
