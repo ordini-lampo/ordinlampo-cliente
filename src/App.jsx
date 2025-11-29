@@ -155,6 +155,42 @@ function App() {
     loadRestaurantData()
   }, [])
 
+  // 🛡️ LOCAL STORAGE SAVER - Salva carrello automaticamente
+  useEffect(() => {
+    if (bowls.length > 0) {
+      localStorage.setItem("ordinlampo_bowls", JSON.stringify(bowls))
+    }
+  }, [bowls])
+
+  useEffect(() => {
+    if (Object.keys(selectedBeverages).length > 0) {
+      localStorage.setItem("ordinlampo_beverages", JSON.stringify(selectedBeverages))
+    }
+  }, [selectedBeverages])
+
+  useEffect(() => {
+    if (customerData.phone || customerData.name) {
+      localStorage.setItem("ordinlampo_customer", JSON.stringify(customerData))
+    }
+  }, [customerData])
+
+  // 🛡️ LOCAL STORAGE LOADER - Ripristina carrello al caricamento
+  useEffect(() => {
+    const savedBowls = localStorage.getItem("ordinlampo_bowls")
+    const savedBeverages = localStorage.getItem("ordinlampo_beverages")
+    const savedCustomer = localStorage.getItem("ordinlampo_customer")
+    
+    if (savedBowls) {
+      try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
+    }
+    if (savedBeverages) {
+      try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
+    }
+    if (savedCustomer) {
+      try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
+    }
+  }, [])
+
   const loadRestaurantData = async () => {
     try {
       setLoading(true)
