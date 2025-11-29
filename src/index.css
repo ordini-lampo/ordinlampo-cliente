@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: #f8fafc;
+}
+
+/* Animazioni */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar personalizzata */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Stili per il riepilogo fisso mobile */
+.summary-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Bottone selezione ingrediente */
+.ingredient-btn {
+  @apply relative flex items-center justify-between p-3 rounded-xl border-2 transition-all duration-200;
+}
+
+.ingredient-btn.selected {
+  @apply border-orange-500 bg-orange-50;
+}
+
+.ingredient-btn:not(.selected) {
+  @apply border-gray-200 bg-white hover:border-orange-300;
+}
+
+.ingredient-btn.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Badge x2 */
+.badge-x2 {
+  @apply absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full;
+}
+
+/* Step indicator */
+.step-dot {
+  @apply w-3 h-3 rounded-full transition-all duration-300;
+}
+
+.step-dot.active {
+  @apply bg-orange-500 w-6;
+}
+
+.step-dot.completed {
+  @apply bg-green-500;
+}
+
+.step-dot.pending {
+  @apply bg-gray-300;
+}
