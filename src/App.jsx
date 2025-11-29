@@ -766,6 +766,13 @@ function App() {
     const message = generateWhatsAppMessage()
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp_number}?text=${encodeURIComponent(message)}`
     
+    // 🛡️ VALVOLA SICUREZZA: Blocca ordini troppo lunghi per WhatsApp
+    const encodedLength = encodeURIComponent(message).length
+    if (encodedLength > 1800) {
+      alert("⚠️ L'ordine è troppo lungo per WhatsApp!\n\nPer favore:\n1. Riduci le note ordine\n2. Oppure dividi in due ordini separati\n\nGrazie!")
+      return // NON aprire WhatsApp
+    }
+    
     // Salva ordine in database
     try {
       // Salva/aggiorna cliente
