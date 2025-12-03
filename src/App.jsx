@@ -592,27 +592,11 @@ function App() {
   // ============================================
   // INVIO ORDINE
   // ============================================
-  const generateWhatsAppMessage = () => {
+const generateWhatsAppMessage = () => {
     const now = new Date()
     const dateStr = now.toLocaleDateString('it-IT')
     const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
     const orderNumber = String(Math.floor(Math.random() * 9999)).padStart(4, '0')
-    
-    let msg = `🍜 NUOVO ORDINE #${orderNumber}\n`
-    msg += `${restaurant.name.toUpperCase()}\n\n\n`
-    
-    // Gestione ordine
-    msg += `⏱️ GESTIONE ORDINE\n`
-    msg += `📥 Ricevuto: ${dateStr} ore ${timeStr}\n\n\n`
-    
-    // Tipo ordine
-    if (orderType === 'delivery') {
-      msg += `🛵 CONSEGNA A DOMICILIO\n`
-      msg += `Fascia richiesta: ${selectedSlot}\n\n`
-    } else {
-      msg += `🥡 RITIRO AL LOCALE\n`
-      msg += `Fascia richiesta: ${selectedSlot}\n\n`
-    }
     
     // Tutte le bowl
     const allBowls = [...bowls]
@@ -628,50 +612,82 @@ function App() {
       })
     }
     
+    let msg = `🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦
+🟦  SEZIONE 1: DATI ORDINE
+🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦
+
+➤ N. Ordine: #${orderNumber}
+
+➤ Data: ${dateStr}
+
+➤ Ora Richiesta: ${selectedSlot}
+
+➤ Tipo Consegna: ${orderType === 'delivery' ? 'A Domicilio' : 'Ritiro al Locale'}
+
+
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+🟩  SEZIONE 2: INGREDIENTI
+🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+
+`
+    
+    // Bowl
     allBowls.forEach((bowl, idx) => {
-      if (allBowls.length > 1) {
-        msg += `━━━ BOWL ${idx + 1} (${bowl.bowlType.name}) ━━━\n\n`
-      }
+      msg += `🍜 BOWL #${idx + 1} (${bowl.bowlType.name})\n`
+      msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`
       
       // Base
-      msg += `🍚 BASE (${bowl.bases.length})\n`
-      bowl.bases.forEach(b => {
-        msg += `→ ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n`
-      })
-      msg += `\n`
+      if (bowl.bases && bowl.bases.length > 0) {
+        msg += `🟩 Base [N. ${bowl.bases.length}]:\n`
+        bowl.bases.forEach(b => {
+          msg += `   🔸 ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n\n`
+        })
+      }
       
       // Proteine
-      msg += `🐟 PROTEINE (${bowl.proteins.length})\n`
-      bowl.proteins.forEach(p => {
-        const doubleText = p.isDouble ? ' ×2' : ''
-        const priceText = p.isDouble ? ` (+€${categories.find(c => c.name === 'proteine')?.double_portion_price?.toFixed(2) || '0.00'})` : ''
-        msg += `→ ${p.name}${doubleText}${priceText}\n`
-      })
-      msg += `\n`
+      if (bowl.proteins && bowl.proteins.length > 0) {
+        msg += `🟩 Proteine [N. ${bowl.proteins.length}]:\n`
+        bowl.proteins.forEach(p => {
+          msg += `   🔸 ${p.name}`
+          if (p.isDouble) {
+            msg += ` ✨ EXTRA x2`
+          }
+          msg += `\n\n`
+        })
+      }
       
       // Ingredienti
-      msg += `🥗 INGREDIENTI (${bowl.ingredients.length})\n`
-      bowl.ingredients.forEach(i => {
-        const doubleText = i.isDouble ? ' ×2' : ''
-        const priceText = i.isDouble ? ` (+€${categories.find(c => c.name === 'ingredienti')?.double_portion_price?.toFixed(2) || '0.00'})` : ''
-        msg += `→ ${i.name}${doubleText}${priceText}\n`
-      })
-      msg += `\n`
+      if (bowl.ingredients && bowl.ingredients.length > 0) {
+        msg += `🟩 Verdure [N. ${bowl.ingredients.length}]:\n`
+        bowl.ingredients.forEach(i => {
+          msg += `   🔸 ${i.name}`
+          if (i.isDouble) {
+            msg += ` ✨ EXTRA x2`
+          }
+          msg += `\n\n`
+        })
+      }
       
       // Salse
-      msg += `🥢 SALSE (${bowl.sauces.length})\n`
-      bowl.sauces.forEach(s => {
-        msg += `→ ${s.name}\n`
-      })
-      msg += `\n`
+      if (bowl.sauces && bowl.sauces.length > 0) {
+        msg += `🟩 Salse [N. ${bowl.sauces.length}]:\n`
+        bowl.sauces.forEach(s => {
+          msg += `   🔸 ${s.name}\n\n`
+        })
+      }
       
       // Topping
-      msg += `✨ TOPPING (${bowl.toppings.length})\n`
-      bowl.toppings.forEach(t => {
-        const doubleText = t.isDouble ? ' ×2' : ''
-        const priceText = t.isDouble ? ` (+€${categories.find(c => c.name === 'topping')?.double_portion_price?.toFixed(2) || '0.00'})` : ''
-        msg += `→ ${t.name}${doubleText}${priceText}\n`
-      })
+      if (bowl.toppings && bowl.toppings.length > 0) {
+        msg += `🟩 Toppings [N. ${bowl.toppings.length}]:\n`
+        bowl.toppings.forEach(t => {
+          msg += `   🔸 ${t.name}`
+          if (t.isDouble) {
+            msg += ` ✨ EXTRA x2`
+          }
+          msg += `\n\n`
+        })
+      }
+      
       msg += `\n`
     })
     
@@ -679,18 +695,18 @@ function App() {
     const beveragesList = Object.entries(selectedBeverages).filter(([_, qty]) => qty > 0)
     if (beveragesList.length > 0) {
       const totalBeverages = beveragesList.reduce((sum, [_, qty]) => sum + qty, 0)
-      msg += `🥤 BEVANDE (${totalBeverages})\n`
+      msg += `🟩 Bevande [N. ${totalBeverages}]:\n`
       beveragesList.forEach(([id, qty]) => {
         const bev = ingredients.find(i => i.id === parseInt(id))
         if (bev) {
-          msg += `→ ${bev.name} ×${qty} - €${(bev.price * qty).toFixed(2)}\n`
+          msg += `   🔸 ${bev.name} ×${qty} - €${(bev.price * qty).toFixed(2)}\n\n`
         }
       })
       msg += `\n`
     }
     
     // Riserva
-    if (settings?.enable_backup_ingredient) {
+    if (settings?.enable_backup_ingredient && backupOption) {
       msg += `🔄 RISERVA: `
       if (backupOption === 'chef_choice') {
         msg += `Sostituire a discrezione dello chef\n`
@@ -704,100 +720,78 @@ function App() {
     
     // Allergie
     if (selectedAllergies.length > 0 || customAllergy) {
-      msg += `⚠️ ALLERGIE: `
+      msg += `⚠️  ALLERGIE: `
       const allergiesList = [...selectedAllergies]
       if (customAllergy) allergiesList.push(customAllergy)
       msg += allergiesList.join(', ') + '\n\n'
     }
     
-    // Extra
-    const extras = []
-    if (wantsCutlery) extras.push('Posate: Sì')
-    if (wantsFloorDelivery) extras.push(`Consegna al piano: Sì (+€${settings?.floor_delivery_price?.toFixed(2) || '1.50'})`)
+    msg += `\n`
     
-    if (extras.length > 0) {
-      msg += `🍴 EXTRA\n`
-      extras.forEach(e => msg += `→ ${e}\n`)
-      msg += `\n`
-    }
-    
-    // Cliente
-    msg += `👤 CLIENTE\n`
-    msg += `${customerData.name} ${customerData.surname} | ${customerData.phone}\n`
+    // Sezione Cliente
+    msg += `🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨
+🟨  SEZIONE 3: CLIENTE
+🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨
+
+➤ Nome: ${customerData.name} ${customerData.surname}
+
+➤ Telefono: ${customerData.phone}
+
+`
     
     if (orderType === 'delivery') {
-      msg += `${customerData.address} ${customerData.civic}, ${customerData.city}\n`
-      msg += `Citofono: ${customerData.doorbell}\n`
+      msg += `➤ Indirizzo: ${customerData.address} ${customerData.civic}, ${customerData.city}
+
+➤ Citofono: ${customerData.doorbell}
+
+`
     }
     
     if (customerData.notesOrder) {
-      msg += `📝 ${customerData.notesOrder}\n`
+      msg += `➤ Note: ${customerData.notesOrder}\n\n`
     }
-    if (customerData.notesAddress) {
-      msg += `📍 ${customerData.notesAddress}\n`
-    }
-    msg += `\n`
     
-    // Pagamento
-    msg += `💳 PAGAMENTO: `
+    msg += `➤ Modalità Pagamento: `
     if (paymentMethod === 'cash') msg += `Contanti alla consegna\n`
     else if (paymentMethod === 'card') msg += `Carta alla consegna (POS)\n`
     else msg += `Già pagato\n`
-    msg += `\n`
     
-    // Conteggio
-    msg += `📊 CONTEGGIO\n`
-    let totalItems = 0
-    allBowls.forEach(bowl => {
-      totalItems += bowl.bases.length + bowl.proteins.length + bowl.ingredients.length + bowl.sauces.length + bowl.toppings.length
-    })
-    totalItems += beveragesList.reduce((sum, [_, qty]) => sum + qty, 0)
+    msg += `\n\n`
     
-    msg += `→ Bowl: ${allBowls.length}\n`
-    msg += `→ Bevande: ${beveragesList.reduce((sum, [_, qty]) => sum + qty, 0)}\n`
-    msg += `────────────\n`
-    msg += `TOTALE ELEMENTI: ${totalItems}\n\n`
-    
-    // Prezzo
-    msg += `💰 PREZZO\n`
-    allBowls.forEach((bowl, idx) => {
-      const bowlPrice = calculateBowlPrice(bowl)
-      msg += `→ Bowl ${allBowls.length > 1 ? idx + 1 : ''} ${bowl.bowlType.name}: €${bowl.bowlType.price.toFixed(2)}\n`
-    })
-    
-    if (calculateBeveragesPrice() > 0) {
-      msg += `→ Bevande: +€${calculateBeveragesPrice().toFixed(2)}\n`
-    }
+    // Sezione Riepilogo
+    msg += `🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧
+🟧  SEZIONE 4: RIEPILOGO
+🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧
+
+➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}
+
+➤ Bowl Piccole: ${allBowls.filter(b => b.bowlType?.name === 'Small').length}
+
+➤ Bowl Grandi: ${allBowls.filter(b => b.bowlType?.name === 'Large').length}
+
+`
     
     if (orderType === 'delivery' && selectedZone) {
-      msg += `→ Consegna: +€${parseFloat(selectedZone.delivery_fee).toFixed(2)}\n`
+      msg += `➤ Consegna a Domicilio: ${selectedZone.name} (€${parseFloat(selectedZone.delivery_fee).toFixed(2)})\n\n`
+    } else {
+      msg += `➤ Consegna a Domicilio: No\n\n`
     }
     
-    if (wantsFloorDelivery) {
-      msg += `→ Consegna al piano: +€${settings?.floor_delivery_price?.toFixed(2) || '1.50'}\n`
-    }
+    msg += `➤ Consegna al Piano: ${wantsFloorDelivery ? 'Sì' : 'No'}\n\n`
     
-    if (appliedDiscount) {
-      const discountText = appliedDiscount.discount_type === 'percentage' 
-        ? `${appliedDiscount.discount_value}%` 
-        : `€${appliedDiscount.discount_value.toFixed(2)}`
-      msg += `→ Sconto ${appliedDiscount.code}: -${discountText}\n`
-    }
+    msg += `➤ Posate Richieste: ${wantsCutlery ? `Sì (${allBowls.length} set)` : 'No'}\n\n`
     
-    if (tipAmount > 0) {
-      msg += `→ Mancia rider: +€${tipAmount.toFixed(2)}\n`
-    }
+    msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
     
-    msg += `────────────\n`
-    msg += `DA PAGARE: €${calculateTotal().toFixed(2)}\n`
+    msg += `\n`
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n`
+    msg += `💰 TOTALE: €${calculateTotal().toFixed(2)}\n`
+    msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n\n`
     
-    if (tipAmount > 0) {
-      msg += `(di cui €${tipAmount.toFixed(2)} mancia rider)\n`
-    }
+    msg += `🍜 Grazie per aver scelto ${restaurant.name}!`
     
     return msg
   }
-  
   const sendWhatsAppOrder = async () => {
     const message = generateWhatsAppMessage()
     const whatsappUrl = `https://wa.me/${restaurant.whatsapp_number}?text=${encodeURIComponent(message)}`
