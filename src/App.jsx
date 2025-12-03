@@ -611,9 +611,9 @@ const generateWhatsAppMessage = () => {
       })
     }
     
-    let msg = `═══════════════════════════\n`
-    msg += `📋  SEZIONE 1: DATI ORDINE\n`
-    msg += `═══════════════════════════\n\n`
+    let msg = `══════════════════\n`
+    msg += `SEZIONE 1: DATI ORDINE\n`
+    msg += `══════════════════\n\n`
     
     msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
@@ -626,14 +626,14 @@ const generateWhatsAppMessage = () => {
     msg += `\n`
     
     // Sezione Ingredienti
-    msg += `═══════════════════════════\n`
-    msg += `🍜  SEZIONE 2: INGREDIENTI\n`
-    msg += `═══════════════════════════\n\n`
+    msg += `══════════════════\n`
+    msg += `SEZIONE 2: INGREDIENTI\n`
+    msg += `══════════════════\n\n`
     
     // Bowl
     allBowls.forEach((bowl, idx) => {
       msg += `🍜 BOWL #${idx + 1} (${bowl.bowlType.name})\n`
-      msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n`
+      msg += `━━━━━━━━━━━━━━━━━━\n\n`
       
       // Base
       if (bowl.bases && bowl.bases.length > 0) {
@@ -728,9 +728,9 @@ const generateWhatsAppMessage = () => {
     msg += `\n`
     
     // Sezione Cliente
-    msg += `═══════════════════════════\n`
-    msg += `👤  SEZIONE 3: CLIENTE\n`
-    msg += `═══════════════════════════\n\n`
+    msg += `══════════════════\n`
+    msg += `SEZIONE 3: CLIENTE\n`
+    msg += `══════════════════\n\n`
     
     msg += `➤ Nome: ${customerData.name} ${customerData.surname}\n\n`
     
@@ -753,9 +753,9 @@ const generateWhatsAppMessage = () => {
     msg += `\n\n`
     
     // Sezione Riepilogo
-    msg += `═══════════════════════════\n`
-    msg += `📊  SEZIONE 4: RIEPILOGO\n`
-    msg += `═══════════════════════════\n\n`
+    msg += `══════════════════\n`
+    msg += `SEZIONE 4: RIEPILOGO\n`
+    msg += `══════════════════\n\n`
     
     msg += `➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}\n\n`
     
@@ -776,9 +776,9 @@ const generateWhatsAppMessage = () => {
     msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
     
     msg += `\n`
-    msg += `━━━━━━━━━━━━━━━━━━━━━━\n`
+    msg += `━━━━━━━━━━━━━━━━━━\n`
     msg += `💰 TOTALE: €${calculateTotal().toFixed(2)}\n`
-    msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n\n`
+    msg += `━━━━━━━━━━━━━━━━━━\n\n\n`
     
     msg += `🍜 Grazie per aver scelto ${restaurant.name}!`
     
