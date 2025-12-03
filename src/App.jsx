@@ -595,7 +595,6 @@ function App() {
 const generateWhatsAppMessage = () => {
     const now = new Date()
     const dateStr = now.toLocaleDateString('it-IT')
-    const timeStr = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
     const orderNumber = String(Math.floor(Math.random() * 9999)).padStart(4, '0')
     
     // Tutte le bowl
@@ -612,24 +611,24 @@ const generateWhatsAppMessage = () => {
       })
     }
     
-    let msg = `════════════════════════════════════════════════════════════════════════════════════════════════════════════
-🟦  SEZIONE 1: DATI ORDINE
-════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-➤ N. Ordine: #${orderNumber}
-
-➤ Data: ${dateStr}
-
-➤ Ora Richiesta: ${selectedSlot}
-
-➤ Tipo Consegna: ${orderType === 'delivery' ? 'A Domicilio' : 'Ritiro al Locale'}
-
-
-═══════════════════════════
-🟩  SEZIONE 2: INGREDIENTI
-═══════════════════════════
-
-`
+    let msg = `═══════════════════════════\n`
+    msg += `📋  SEZIONE 1: DATI ORDINE\n`
+    msg += `═══════════════════════════\n\n`
+    
+    msg += `➤ N. Ordine: #${orderNumber}\n\n`
+    
+    msg += `➤ Data: ${dateStr}\n\n`
+    
+    msg += `➤ Ora Richiesta: ${selectedSlot}\n\n`
+    
+    msg += `➤ Tipo Consegna: ${orderType === 'delivery' ? 'A Domicilio' : 'Ritiro al Locale'}\n\n`
+    
+    msg += `\n`
+    
+    // Sezione Ingredienti
+    msg += `═══════════════════════════\n`
+    msg += `🍜  SEZIONE 2: INGREDIENTI\n`
+    msg += `═══════════════════════════\n\n`
     
     // Bowl
     allBowls.forEach((bowl, idx) => {
@@ -638,7 +637,7 @@ const generateWhatsAppMessage = () => {
       
       // Base
       if (bowl.bases && bowl.bases.length > 0) {
-        msg += `🟩 Base [N. ${bowl.bases.length}]:\n`
+        msg += `◆ Base [N. ${bowl.bases.length}]:\n`
         bowl.bases.forEach(b => {
           msg += `   🔸 ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n\n`
         })
@@ -646,7 +645,7 @@ const generateWhatsAppMessage = () => {
       
       // Proteine
       if (bowl.proteins && bowl.proteins.length > 0) {
-        msg += `🟩 Proteine [N. ${bowl.proteins.length}]:\n`
+        msg += `◆ Proteine [N. ${bowl.proteins.length}]:\n`
         bowl.proteins.forEach(p => {
           msg += `   🔸 ${p.name}`
           if (p.isDouble) {
@@ -658,7 +657,7 @@ const generateWhatsAppMessage = () => {
       
       // Ingredienti
       if (bowl.ingredients && bowl.ingredients.length > 0) {
-        msg += `🟩 Verdure [N. ${bowl.ingredients.length}]:\n`
+        msg += `◆ Verdure [N. ${bowl.ingredients.length}]:\n`
         bowl.ingredients.forEach(i => {
           msg += `   🔸 ${i.name}`
           if (i.isDouble) {
@@ -670,7 +669,7 @@ const generateWhatsAppMessage = () => {
       
       // Salse
       if (bowl.sauces && bowl.sauces.length > 0) {
-        msg += `🟩 Salse [N. ${bowl.sauces.length}]:\n`
+        msg += `◆ Salse [N. ${bowl.sauces.length}]:\n`
         bowl.sauces.forEach(s => {
           msg += `   🔸 ${s.name}\n\n`
         })
@@ -678,7 +677,7 @@ const generateWhatsAppMessage = () => {
       
       // Topping
       if (bowl.toppings && bowl.toppings.length > 0) {
-        msg += `🟩 Toppings [N. ${bowl.toppings.length}]:\n`
+        msg += `◆ Toppings [N. ${bowl.toppings.length}]:\n`
         bowl.toppings.forEach(t => {
           msg += `   🔸 ${t.name}`
           if (t.isDouble) {
@@ -695,7 +694,7 @@ const generateWhatsAppMessage = () => {
     const beveragesList = Object.entries(selectedBeverages).filter(([_, qty]) => qty > 0)
     if (beveragesList.length > 0) {
       const totalBeverages = beveragesList.reduce((sum, [_, qty]) => sum + qty, 0)
-      msg += `🟩 Bevande [N. ${totalBeverages}]:\n`
+      msg += `◆ Bevande [N. ${totalBeverages}]:\n`
       beveragesList.forEach(([id, qty]) => {
         const bev = ingredients.find(i => i.id === parseInt(id))
         if (bev) {
@@ -729,22 +728,17 @@ const generateWhatsAppMessage = () => {
     msg += `\n`
     
     // Sezione Cliente
-    msg += `═══════════════════════════
-🟨  SEZIONE 3: CLIENTE
-═══════════════════════════
-
-➤ Nome: ${customerData.name} ${customerData.surname}
-
-➤ Telefono: ${customerData.phone}
-
-`
+    msg += `═══════════════════════════\n`
+    msg += `👤  SEZIONE 3: CLIENTE\n`
+    msg += `═══════════════════════════\n\n`
+    
+    msg += `➤ Nome: ${customerData.name} ${customerData.surname}\n\n`
+    
+    msg += `➤ Telefono: ${customerData.phone}\n\n`
     
     if (orderType === 'delivery') {
-      msg += `➤ Indirizzo: ${customerData.address} ${customerData.civic}, ${customerData.city}
-
-➤ Citofono: ${customerData.doorbell}
-
-`
+      msg += `➤ Indirizzo: ${customerData.address} ${customerData.civic}, ${customerData.city}\n\n`
+      msg += `➤ Citofono: ${customerData.doorbell}\n\n`
     }
     
     if (customerData.notesOrder) {
@@ -759,32 +753,6 @@ const generateWhatsAppMessage = () => {
     msg += `\n\n`
     
     // Sezione Riepilogo
-    msg += `═══════════════════════════
-🟧  SEZIONE 4: RIEPILOGO
-═══════════════════════════
-
-➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}
-
-➤ Bowl Piccole: ${allBowls.filter(b => b.bowlType?.name === 'Small').length}
-
-➤ Bowl Grandi: ${allBowls.filter(b => b.bowlType?.name === 'Large').length}
-
-`
-    
-    if (orderType === 'delivery' && selectedZone) {
-      msg += `➤ Consegna a Domicilio: ${selectedZone.name} (€${parseFloat(selectedZone.delivery_fee).toFixed(2)})\n\n`
-    } else {
-      msg += `➤ Consegna a Domicilio: No\n\n`
-    }
-    
-    msg += `➤ Consegna al Piano: ${wantsFloorDelivery ? 'Sì' : 'No'}\n\n`
-    
-    msg += `➤ Posate Richieste: ${wantsCutlery ? `Sì (${allBowls.length} set)` : 'No'}\n\n`
-    
-    msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
-    
-    msg += `\n`
-  // Sezione Riepilogo
     msg += `═══════════════════════════\n`
     msg += `📊  SEZIONE 4: RIEPILOGO\n`
     msg += `═══════════════════════════\n\n`
@@ -806,6 +774,8 @@ const generateWhatsAppMessage = () => {
     msg += `➤ Posate Richieste: ${wantsCutlery ? `Sì (${allBowls.length} set)` : 'No'}\n\n`
     
     msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
+    
+    msg += `\n`
     msg += `━━━━━━━━━━━━━━━━━━━━━━\n`
     msg += `💰 TOTALE: €${calculateTotal().toFixed(2)}\n`
     msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n\n`
