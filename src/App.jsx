@@ -612,9 +612,9 @@ const generateWhatsAppMessage = () => {
       })
     }
     
-    let msg = `🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦
+    let msg = `════════════════════════════════════════════════════════════════════════════════════════════════════════════
 🟦  SEZIONE 1: DATI ORDINE
-🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦🟦
+════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 ➤ N. Ordine: #${orderNumber}
 
@@ -625,9 +625,9 @@ const generateWhatsAppMessage = () => {
 ➤ Tipo Consegna: ${orderType === 'delivery' ? 'A Domicilio' : 'Ritiro al Locale'}
 
 
-🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+═══════════════════════════
 🟩  SEZIONE 2: INGREDIENTI
-🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩
+═══════════════════════════
 
 `
     
@@ -729,9 +729,9 @@ const generateWhatsAppMessage = () => {
     msg += `\n`
     
     // Sezione Cliente
-    msg += `🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨
+    msg += `═══════════════════════════
 🟨  SEZIONE 3: CLIENTE
-🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨🟨
+═══════════════════════════
 
 ➤ Nome: ${customerData.name} ${customerData.surname}
 
@@ -759,9 +759,9 @@ const generateWhatsAppMessage = () => {
     msg += `\n\n`
     
     // Sezione Riepilogo
-    msg += `🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧
+    msg += `═══════════════════════════
 🟧  SEZIONE 4: RIEPILOGO
-🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧🟧
+═══════════════════════════
 
 ➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}
 
@@ -784,6 +784,28 @@ const generateWhatsAppMessage = () => {
     msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
     
     msg += `\n`
+  // Sezione Riepilogo
+    msg += `═══════════════════════════\n`
+    msg += `📊  SEZIONE 4: RIEPILOGO\n`
+    msg += `═══════════════════════════\n\n`
+    
+    msg += `➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}\n\n`
+    
+    msg += `➤ Bowl Piccole: ${allBowls.filter(b => b.bowlType?.name === 'Small').length}\n\n`
+    
+    msg += `➤ Bowl Grandi: ${allBowls.filter(b => b.bowlType?.name === 'Large').length}\n\n`
+    
+    if (orderType === 'delivery' && selectedZone) {
+      msg += `➤ Consegna a Domicilio: ${selectedZone.name} (€${parseFloat(selectedZone.delivery_fee).toFixed(2)})\n\n`
+    } else {
+      msg += `➤ Consegna a Domicilio: No\n\n`
+    }
+    
+    msg += `➤ Consegna al Piano: ${wantsFloorDelivery ? 'Sì' : 'No'}\n\n`
+    
+    msg += `➤ Posate Richieste: ${wantsCutlery ? `Sì (${allBowls.length} set)` : 'No'}\n\n`
+    
+    msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
     msg += `━━━━━━━━━━━━━━━━━━━━━━\n`
     msg += `💰 TOTALE: €${calculateTotal().toFixed(2)}\n`
     msg += `━━━━━━━━━━━━━━━━━━━━━━\n\n\n`
