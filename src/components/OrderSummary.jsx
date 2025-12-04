@@ -35,7 +35,6 @@ function OrderSummary({
   activeSteps,
   setShowConfirmPhone
 }) {
-  // Costruisci lista bowl completa
   const allBowls = [...bowls]
   if (currentBowlIndex >= bowls.length && selectedBowlType) {
     allBowls.push({
@@ -49,24 +48,42 @@ function OrderSummary({
     })
   }
 
-  // Calcola totale bevande
   const beveragesList = Object.entries(selectedBeverages).filter(([_, qty]) => qty > 0)
   const beveragesTotal = beveragesList.reduce((sum, [id, qty]) => {
     const bev = ingredients.find(i => i.id === parseInt(id))
     return sum + (bev?.price || 0) * qty
   }, 0)
 
-  // Helper per navigare a sezione specifica
   const goToSection = (sectionId) => {
     const stepIndex = activeSteps.findIndex(s => s.id === sectionId)
     if (stepIndex >= 0) goToStep(stepIndex)
   }
 
-  // Metodo pagamento label
   const paymentLabel = {
     cash: 'Contanti alla consegna',
     card: 'Carta alla consegna (POS)',
     prepaid: 'Già pagato'
+  }
+
+  const formatSlotDisplay = () => {
+    if (!selectedSlot) return ''
+    
+    if (typeof selectedSlot === 'object') {
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      
+      const isToday = selectedSlot.date.toDateString() === today.toDateString()
+      const isTomorrow = selectedSlot.date.toDateString() === tomorrow.toDateString()
+      
+      let dayLabel = selectedSlot.dayName
+      if (isToday) dayLabel = 'Oggi'
+      if (isTomorrow) dayLabel = 'Domani'
+      
+      return `${dayLabel}, ${selectedSlot.dateString} - ${selectedSlot.timeLabel}`
+    }
+    
+    return selectedSlot
   }
 
   return (
@@ -75,7 +92,6 @@ function OrderSummary({
         📋 Riepilogo ordine
       </h2>
 
-      {/* Tipo ordine */}
       <div 
         className="p-4 bg-gray-50 rounded-xl mb-4 cursor-pointer hover:bg-gray-100 transition-colors"
         onClick={() => goToSection('order-type')}
@@ -96,7 +112,6 @@ function OrderSummary({
         </div>
       </div>
 
-      {/* Fascia oraria */}
       <div 
         className="p-4 bg-gray-50 rounded-xl mb-4 cursor-pointer hover:bg-gray-100 transition-colors"
         onClick={() => goToSection('time-slot')}
@@ -106,14 +121,13 @@ function OrderSummary({
             <span className="text-2xl">⏰</span>
             <div>
               <p className="font-bold text-gray-800">Fascia oraria</p>
-              <p className="text-sm text-gray-500">{selectedSlot}</p>
+              <p className="text-sm text-gray-500">{formatSlotDisplay()}</p>
             </div>
           </div>
           <span className="text-gray-400">✏️</span>
         </div>
       </div>
 
-      {/* Bowl */}
       {allBowls.map((bowl, idx) => (
         <div key={idx} className="p-4 bg-orange-50 rounded-xl mb-4 border-2 border-orange-200">
           <div className="flex items-center justify-between mb-3">
@@ -138,7 +152,6 @@ function OrderSummary({
             </div>
           </div>
 
-          {/* Base */}
           <div className="mb-2">
             <p className="text-sm font-medium text-gray-600">🍚 Base:</p>
             <p className="text-sm text-gray-800">
@@ -147,7 +160,6 @@ function OrderSummary({
             </p>
           </div>
 
-          {/* Proteine */}
           <div className="mb-2">
             <p className="text-sm font-medium text-gray-600">🐟 Proteine:</p>
             <p className="text-sm text-gray-800">
@@ -155,7 +167,6 @@ function OrderSummary({
             </p>
           </div>
 
-          {/* Ingredienti */}
           <div className="mb-2">
             <p className="text-sm font-medium text-gray-600">🥗 Ingredienti:</p>
             <p className="text-sm text-gray-800">
@@ -163,7 +174,6 @@ function OrderSummary({
             </p>
           </div>
 
-          {/* Salse */}
           <div className="mb-2">
             <p className="text-sm font-medium text-gray-600">🥢 Salse:</p>
             <p className="text-sm text-gray-800">
@@ -171,7 +181,6 @@ function OrderSummary({
             </p>
           </div>
 
-          {/* Topping */}
           <div className="mb-2">
             <p className="text-sm font-medium text-gray-600">✨ Topping:</p>
             <p className="text-sm text-gray-800">
@@ -179,7 +188,6 @@ function OrderSummary({
             </p>
           </div>
 
-          {/* Prezzo bowl */}
           <div className="mt-3 pt-3 border-t border-orange-200">
             <p className="text-right font-bold text-orange-700">
               €{calculateBowlPrice(bowl).toFixed(2)}
@@ -188,7 +196,6 @@ function OrderSummary({
         </div>
       ))}
 
-      {/* Aggiungi altra bowl */}
       <button
         onClick={addNewBowl}
         className="w-full p-4 border-2 border-dashed border-orange-300 rounded-xl text-orange-500 font-medium hover:bg-orange-50 transition-colors mb-4"
@@ -196,7 +203,6 @@ function OrderSummary({
         + Aggiungi altra bowl
       </button>
 
-      {/* Bevande */}
       {beveragesList.length > 0 && (
         <div 
           className="p-4 bg-blue-50 rounded-xl mb-4 cursor-pointer hover:bg-blue-100 transition-colors"
@@ -220,7 +226,6 @@ function OrderSummary({
         </div>
       )}
 
-      {/* Allergie */}
       {(selectedAllergies.length > 0 || customAllergy) && (
         <div className="p-4 bg-red-50 rounded-xl mb-4">
           <p className="font-bold text-red-800">⚠️ Allergie</p>
@@ -230,7 +235,6 @@ function OrderSummary({
         </div>
       )}
 
-      {/* Ingrediente riserva */}
       {backupOption && (
         <div className="p-4 bg-gray-50 rounded-xl mb-4">
           <p className="font-bold text-gray-800">🔄 Ingrediente riserva</p>
@@ -242,7 +246,6 @@ function OrderSummary({
         </div>
       )}
 
-      {/* Extra */}
       {(wantsCutlery || wantsFloorDelivery) && (
         <div className="p-4 bg-gray-50 rounded-xl mb-4">
           <p className="font-bold text-gray-800">🍴 Extra</p>
@@ -255,7 +258,6 @@ function OrderSummary({
         </div>
       )}
 
-      {/* Cliente */}
       <div 
         className="p-4 bg-gray-50 rounded-xl mb-4 cursor-pointer hover:bg-gray-100 transition-colors"
         onClick={() => goToSection('customer')}
@@ -278,13 +280,11 @@ function OrderSummary({
         )}
       </div>
 
-      {/* Pagamento */}
       <div className="p-4 bg-gray-50 rounded-xl mb-4">
         <p className="font-bold text-gray-800">💳 Pagamento</p>
         <p className="text-sm text-gray-700">{paymentLabel[paymentMethod]}</p>
       </div>
 
-      {/* Totale */}
       <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200 mb-6">
         <h3 className="font-bold text-green-800 mb-3">💰 Riepilogo prezzo</h3>
         
@@ -309,13 +309,13 @@ function OrderSummary({
           </div>
         )}
         
-{/* Compenso Rider Trasparente */}
         {orderType === 'delivery' && restaurant?.show_rider_compensation && restaurant?.rider_compensation_amount > 0 && (
           <div className="flex justify-between text-sm text-green-600 mb-1 bg-green-50 p-2 rounded">
             <span>💚 Compenso Rider dichiarato</span>
             <span>€{parseFloat(restaurant.rider_compensation_amount).toFixed(2)}</span>
           </div>
         )}
+
         {wantsFloorDelivery && (
           <div className="flex justify-between text-sm text-gray-700 mb-1">
             <span>Consegna al piano</span>
@@ -354,7 +354,6 @@ function OrderSummary({
         </div>
       </div>
 
-      {/* Bottone conferma */}
       <button
         onClick={() => setShowConfirmPhone(true)}
         className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all"
