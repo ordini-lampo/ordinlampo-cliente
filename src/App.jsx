@@ -150,124 +150,162 @@ function App() {
 
   // ============================================
   // CARICAMENTO DATI INIZIALE
-  // ============================================
   useEffect(() => {
-const loadRestaurantData = async () => {
-  try {
-    setLoading(true)
+    loadRestaurantData()
+  }, [])
+
+  // 🛡️ LOCAL STORAGE SAVER - Salva carrello automaticamente
+  useEffect(() => {
+    if (bowls.length > 0) {
+      localStorage.setItem("ordinlampo_bowls", JSON.stringify(bowls))
+    }
+  }, [bowls])
+
+  useEffect(() => {
+    if (Object.keys(selectedBeverages).length > 0) {
+      localStorage.setItem("ordinlampo_beverages", JSON.stringify(selectedBeverages))
+    }
+  }, [selectedBeverages])
+
+  useEffect(() => {
+    if (customerData.phone || customerData.name) {
+      localStorage.setItem("ordinlampo_customer", JSON.stringify(customerData))
+    }
+  }, [customerData])
+
+  // 🛡️ LOCAL STORAGE LOADER - Ripristina carrello al caricamento
+  useEffect(() => {
+    const savedBowls = localStorage.getItem("ordinlampo_bowls")
+    const savedBeverages = localStorage.getItem("ordinlampo_beverages")
+    const savedCustomer = localStorage.getItem("ordinlampo_customer")
     
-    // Ottieni slug da URL o usa default
-    const urlParams = new URLSearchParams(window.location.search)
-    const slug = urlParams.get('r') || 'pokenjoy-sanremo'
-    
-    // Carica ristorante
-    const { data: restaurantData, error: restaurantError } = await supabase
-      .from('restaurants')
-      .select('*')
-      .eq('slug', slug)
-      .eq('is_active', true)
-      .single()
-    
-    if (restaurantError) throw new Error('Ristorante non trovato')
-    setRestaurant(restaurantData)
-    
-    // Carica settings
-    const { data: settingsData } = await supabase
-      .from('restaurant_settings')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .single()
-    setSettings(settingsData || {})
-    
-    // Carica locations
-    const { data: locationsData } = await supabase
-      .from('locations')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .eq('is_active', true)
-      .order('sort_order')
-    setLocations(locationsData || [])
-    
-    // Carica tipi bowl
-    const { data: bowlTypesData } = await supabase
-      .from('bowl_types')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .eq('is_active', true)
-      .order('sort_order')
-    setBowlTypes(bowlTypesData || [])
-    
-    // Carica categorie ingredienti
-    const { data: categoriesData } = await supabase
-      .from('ingredient_categories')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .eq('is_active', true)
-      .order('sort_order')
-    setCategories(categoriesData || [])
-    
-    // Carica ingredienti
-    const { data: ingredientsData } = await supabase
-      .from('ingredients')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .eq('is_active', true)
-      .eq('is_available', true)
-      .order('sort_order')
-    setIngredients(ingredientsData || [])
-    
-    // Carica orari apertura
-    const { data: hoursData } = await supabase
-      .from('opening_hours')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .order('day_of_week')
-    setOpeningHours(hoursData || [])
-    
-    // Carica chiusure speciali
-    const { data: closuresData } = await supabase
-      .from('special_closures')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .gte('closure_date', new Date().toISOString().split('T')[0])
-    setSpecialClosures(closuresData || [])
-    
-    // Carica codici sconto attivi
-    const { data: codesData } = await supabase
-      .from('discount_codes')
-      .select('*')
-      .eq('restaurant_id', restaurantData.id)
-      .eq('is_active', true)
-    setDiscountCodes(codesData || [])
-    
-    // ⚠️ CONTROLLI ORARI DISABILITATI
-    // L'app è sempre accessibile - il cliente sceglie la fascia oraria desiderata
-    
-    // COMMENTATO: Verifica se ristorante accetta ordini
-    // if (!restaurantData.accept_orders) {
-    //   setIsClosed(true)
-    //   setClosedMessage('Il ristorante non accetta ordini al momento.')
-    //   return
-    // }
-    
-    // COMMENTATO: Verifica orari apertura
-    // const closureCheck = checkIfClosed(hoursData, closuresData)
-    // if (closureCheck.closed) {
-    //   setIsClosed(true)
-    //   setClosedMessage(closureCheck.message)
-    //   return
-    // }
-    
-    // Carica cliente precedente (se presente in localStorage)
-    loadPreviousCustomer(restaurantData.id)
-    
-  } catch (err) {
-    console.error('Errore caricamento:', err)
-    setError(err.message)
-  } finally {
-    setLoading(false)
+    if (savedBowls) {
+      try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
+    }
+    if (savedBeverages) {
+      try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
+    }
+    if (savedCustomer) {
+      try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
+    }
+  }, [])
+
+  const loadRestaurantData = async () => {
+    try {
+      setLoading(true)
+      
+      // Ottieni slug da URL o usa default
+      const urlParams = new URLSearchParams(window.location.search)
+      const slug = urlParams.get('r') || 'pokenjoy-sanremo'
+      
+      // Carica ristorante
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .single()
+      
+      if (restaurantError) throw new Error('Ristorante non trovato')
+      setRestaurant(restaurantData)
+      
+      // Carica settings
+      const { data: settingsData } = await supabase
+        .from('restaurant_settings')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .single()
+      setSettings(settingsData || {})
+      
+      // Carica locations
+      const { data: locationsData } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+        .order('sort_order')
+      setLocations(locationsData || [])
+      
+      // Carica tipi bowl
+      const { data: bowlTypesData } = await supabase
+        .from('bowl_types')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+        .order('sort_order')
+      setBowlTypes(bowlTypesData || [])
+      
+      // Carica categorie ingredienti
+      const { data: categoriesData } = await supabase
+        .from('ingredient_categories')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+        .order('sort_order')
+      setCategories(categoriesData || [])
+      
+      // Carica ingredienti
+      const { data: ingredientsData } = await supabase
+        .from('ingredients')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+        .eq('is_available', true)
+        .order('sort_order')
+      setIngredients(ingredientsData || [])
+      
+      // Carica orari apertura
+      const { data: hoursData } = await supabase
+        .from('opening_hours')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .order('day_of_week')
+      setOpeningHours(hoursData || [])
+      
+      // Carica chiusure speciali
+      const { data: closuresData } = await supabase
+        .from('special_closures')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .gte('closure_date', new Date().toISOString().split('T')[0])
+      setSpecialClosures(closuresData || [])
+      
+      // Carica codici sconto attivi
+      const { data: codesData } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .eq('restaurant_id', restaurantData.id)
+        .eq('is_active', true)
+      setDiscountCodes(codesData || [])
+      
+      // ⚠️ CONTROLLI ORARI DISABILITATI
+      // L'app è sempre accessibile - il cliente sceglie la fascia oraria desiderata
+      
+      // COMMENTATO: Verifica se ristorante accetta ordini
+      // if (!restaurantData.accept_orders) {
+      //   setIsClosed(true)
+      //   setClosedMessage('Il ristorante non accetta ordini al momento.')
+      //   return
+      // }
+      
+      // COMMENTATO: Verifica orari apertura
+      // const closureCheck = checkIfClosed(hoursData, closuresData)
+      // if (closureCheck.closed) {
+      //   setIsClosed(true)
+      //   setClosedMessage(closureCheck.message)
+      //   return
+      // }
+      
+      // Carica cliente precedente (se presente in localStorage)
+      loadPreviousCustomer(restaurantData.id)
+      
+    } catch (err) {
+      console.error('Errore caricamento:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   // ============================================
   // VERIFICA ORARI APERTURA
