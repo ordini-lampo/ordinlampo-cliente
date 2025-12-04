@@ -136,7 +136,7 @@ function App() {
     { id: 'beverages', name: 'Bevande', component: BeveragesSelection },
     { id: 'backup', name: 'Riserva', component: BackupIngredient, condition: () => settings?.enable_backup_ingredient },
     { id: 'allergies', name: 'Allergie', component: AllergiesSelection, condition: () => settings?.enable_allergies },
-    { id: 'time-slot', name: 'Orario', component: TimeSlot },
+    ...(currentBowlIndex === 0 ? [{ id: 'time-slot', name: 'Orario', component: TimeSlot }] : []),
     { id: 'customer', name: 'Dati', component: CustomerData },
     { id: 'extras', name: 'Extra', component: ExtrasSelection },
     { id: 'discount', name: 'Sconto', component: DiscountCode },
