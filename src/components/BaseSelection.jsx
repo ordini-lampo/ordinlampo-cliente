@@ -39,13 +39,20 @@ function BaseSelection({
         🍚 Scegli la tua base
       </h2>
       
-      {/* Toggle 50/50 */}
+      {/* Toggle 50/50 - SUPER VISIBILE */}
       {baseCategory?.allow_half_half && (
-        <div className="mb-6 p-4 bg-purple-50 rounded-xl">
+        <div className={`mb-6 p-5 rounded-2xl border-4 transition-all ${
+          isHalfHalf 
+            ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500 shadow-lg' 
+            : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-400 animate-pulse'
+        }`}>
           <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <p className="font-semibold text-purple-700">Opzione 50/50</p>
-              <p className="text-sm text-purple-600">Scegli due basi diverse!</p>
+            <div className="flex items-center gap-3">
+              <span className="text-4xl">🔀</span>
+              <div>
+                <p className="font-bold text-xl text-gray-800">Mix 50/50</p>
+                <p className="text-sm text-gray-600 font-medium">Due basi diverse nella stessa bowl!</p>
+              </div>
             </div>
             <div className="relative">
               <input
@@ -59,10 +66,20 @@ function BaseSelection({
                 }}
                 className="sr-only"
               />
-              <div className={`w-14 h-8 rounded-full transition-colors ${
-                isHalfHalf ? 'bg-purple-500' : 'bg-gray-300'
+              <div className={`w-20 h-10 rounded-full transition-all shadow-md ${
+                isHalfHalf ? 'bg-green-500' : 'bg-gray-400'
               }`}>
-                <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform mt-1 ${
+                <div className={`w-8 h-8 bg-white rounded-full shadow-lg transform transition-all mt-1 flex items-center justify-center text-lg ${
+                  isHalfHalf ? 'translate-x-11' : 'translate-x-1'
+                }`}>
+                  {isHalfHalf ? '✓' : ''}
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+      )}
+```
                   isHalfHalf ? 'translate-x-7' : 'translate-x-1'
                 }`} />
               </div>
