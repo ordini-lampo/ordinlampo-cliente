@@ -13,7 +13,6 @@ export default function TimeSlot({
   const [selectedTime, setSelectedTime] = useState(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
 
-  // Calcola date disponibili (prossimi 7 giorni)
   useEffect(() => {
     if (!openingHours || openingHours.length === 0) return
 
@@ -27,11 +26,9 @@ export default function TimeSlot({
       const dayOfWeek = date.getDay()
       const dayHours = openingHours.find(h => h.day_of_week === dayOfWeek)
       
-      // Verifica se è un giorno di chiusura speciale
       const dateString = date.toISOString().split('T')[0]
       const isClosed = specialClosures?.some(c => c.closure_date === dateString)
       
-      // Solo se locale aperto e non in chiusura speciale
       if (dayHours && !dayHours.is_closed && !isClosed) {
         dates.push({
           date: date,
@@ -46,7 +43,6 @@ export default function TimeSlot({
     setAvailableDates(dates)
   }, [openingHours, specialClosures])
 
-  // Calcola fasce orarie quando cambia data selezionata
   useEffect(() => {
     if (!selectedDate) {
       setTimeSlots([])
@@ -58,13 +54,11 @@ export default function TimeSlot({
     const isToday = selectedDate.date.toDateString() === now.toDateString()
     const currentTime = now.getHours() * 60 + now.getMinutes()
 
-    // Pranzo
     if (selectedDate.hours.lunch_enabled) {
       const [lunchHour, lunchMin] = selectedDate.hours.lunch_open.split(':').map(Number)
       const [lunchEndHour] = selectedDate.hours.lunch_close.split(':').map(Number)
       const lunchStartTime = lunchHour * 60 + lunchMin
       
-      // Se è oggi, mostra solo se non è ancora passato
       if (!isToday || currentTime < lunchStartTime + 60) {
         slots.push({
           label: `Pranzo (${selectedDate.hours.lunch_open}-${selectedDate.hours.lunch_close})`,
@@ -75,12 +69,10 @@ export default function TimeSlot({
       }
     }
 
-    // Cena
     if (selectedDate.hours.dinner_enabled) {
       const [dinnerHour, dinnerMin] = selectedDate.hours.dinner_open.split(':').map(Number)
       const dinnerStartTime = dinnerHour * 60 + dinnerMin
       
-      // Se è oggi, mostra solo se non è ancora passato
       if (!isToday || currentTime < dinnerStartTime + 60) {
         slots.push({
           label: `Cena (${selectedDate.hours.dinner_open}-${selectedDate.hours.dinner_close})`,
@@ -97,7 +89,6 @@ export default function TimeSlot({
   const handleContinue = () => {
     if (!selectedDate || !selectedTime) return
     
-    // Combina data + orario
     const combinedSlot = {
       date: selectedDate.date,
       dateString: selectedDate.dateString,
@@ -115,7 +106,7 @@ export default function TimeSlot({
     setShowConfirmation(false)
     nextStep()
   }
-INIZIA DALLA RIGA import)
+
   if (showConfirmation) {
     const today = new Date()
     const tomorrow = new Date(today)
@@ -124,25 +115,21 @@ INIZIA DALLA RIGA import)
     const isToday = selectedDate.date.toDateString() === today.toDateString()
     const isTomorrow = selectedDate.date.toDateString() === tomorrow.toDateString()
     
-    // Label: Oggi / Domani / Nome giorno (es. Sabato)
-    let dayLabel = selectedDate.dayName // default: nome giorno
+    let dayLabel = selectedDate.dayName
     if (isToday) dayLabel = 'Oggi'
     if (isTomorrow) dayLabel = 'Domani'
     
-    // Data estesa con giorno settimana (es. "Venerdì 5 dicembre 2025")
     const fullDate = selectedDate.date.toLocaleDateString('it-IT', { 
       weekday: 'long',
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 
     })
-    // Capitalize prima lettera
     const fullDateCapitalized = fullDate.charAt(0).toUpperCase() + fullDate.slice(1)
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg max-w-md w-full p-6">
-          {/* Header */}
           <div className="flex items-center justify-center mb-4">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
               <span className="text-3xl">📅</span>
@@ -153,7 +140,6 @@ INIZIA DALLA RIGA import)
             Conferma Data e Orario
           </h3>
           
-          {/* Riepilogo */}
           <div className="bg-blue-50 rounded-lg p-4 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-700 mb-2">
@@ -168,7 +154,6 @@ INIZIA DALLA RIGA import)
             </div>
           </div>
           
-          {/* Info */}
           <div className="space-y-3 mb-6">
             <p className="text-gray-700">
               Il tuo ordine è programmato per <strong>{fullDateCapitalized}</strong> durante la fascia oraria <strong>{selectedTime.value}</strong>.
@@ -185,7 +170,6 @@ INIZIA DALLA RIGA import)
             </p>
           </div>
           
-          {/* Pulsanti */}
           <div className="space-y-3">
             <button
               onClick={handleConfirm}
@@ -211,7 +195,6 @@ INIZIA DALLA RIGA import)
       <h2 className="text-2xl font-bold mb-2">Quando vuoi ricevere l'ordine?</h2>
       <p className="text-gray-600 mb-6">Scegli il giorno e la fascia oraria</p>
       
-      {/* SELETTORE DATA */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3">1. Scegli il giorno</h3>
         <div className="grid grid-cols-2 gap-3">
@@ -220,7 +203,7 @@ INIZIA DALLA RIGA import)
               key={idx}
               onClick={() => {
                 setSelectedDate(dateObj)
-                setSelectedTime(null) // Reset orario
+                setSelectedTime(null)
               }}
               className={`p-4 rounded-lg border-2 transition ${
                 selectedDate?.dateString === dateObj.dateString
@@ -237,7 +220,6 @@ INIZIA DALLA RIGA import)
         </div>
       </div>
       
-      {/* SELETTORE ORARIO */}
       {selectedDate && timeSlots.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-3">2. Scegli la fascia oraria</h3>
@@ -268,7 +250,6 @@ INIZIA DALLA RIGA import)
         </div>
       )}
       
-      {/* PULSANTE CONTINUA */}
       <button
         onClick={handleContinue}
         disabled={!selectedDate || !selectedTime}
