@@ -617,15 +617,19 @@ const generateWhatsAppMessage = () => {
     msg += `SEZIONE 1: DATI ORDINE\n`
     msg += `══════════════════\n\n`
     
-    msg += `➤ N. Ordine: #${orderNumber}\n\n`
+msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
-    msg += `➤ Data: ${dateStr}\n\n`
+    const orderDate = dateStr
+    const orderTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
     
-    msg += `➤ Ora Richiesta: ${selectedSlot}\n\n`
+    msg += `➤ Data Ordine: ${orderDate} ore ${orderTime}\n\n`
     
-    msg += `➤ Tipo Consegna: ${orderType === 'delivery' ? 'A Domicilio' : 'Ritiro al Locale'}\n\n`
-    
-    msg += `\n`
+    if (selectedSlot && typeof selectedSlot === 'object') {
+      msg += `➤ Data Consegna: ${selectedSlot.dateString}\n\n`
+      msg += `➤ Ora Consegna Richiesta: ${selectedSlot.timeLabel}\n\n`
+    } else {
+      msg += `➤ Ora Richiesta: ${selectedSlot}\n\n`
+    }
     
     // Sezione Ingredienti
     msg += `══════════════════\n`
@@ -832,10 +836,18 @@ const generateWhatsAppMessage = () => {
       
       // Incrementa contatore slot
       if (selectedSlot) {
+        const slotDate = typeof selectedSlot === 'object' 
+          ? selectedSlot.date.toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+          
+        const slotTime = typeof selectedSlot === 'object'
+          ? selectedSlot.time
+          : selectedSlot
+          
         await supabase.rpc('increment_slot_count', {
           p_restaurant_id: restaurant.id,
-          p_slot_date: new Date().toISOString().split('T')[0],
-          p_slot_time: selectedSlot
+          p_slot_date: slotDate,
+          p_slot_time: slotTime
         })
       }
       
