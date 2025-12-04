@@ -7,19 +7,18 @@ function BackupIngredient({
   setBackupIngredient,
   nextStep 
 }) {
-  // Ottieni lista ingredienti per il dropdown
   const ingredientCategory = categories.find(c => c.name === 'ingredienti')
   const availableIngredients = ingredients.filter(i => i.category_id === ingredientCategory?.id)
-
+  
   return (
-    <div className="p-6 animate-fadeIn">
+    <div className="p-6 min-h-screen pb-48 animate-fadeIn">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         🔄 Ingrediente di riserva
       </h2>
       <p className="text-gray-500 mb-6">
         Se un ingrediente non fosse disponibile, come preferisci procedere?
       </p>
-
+      
       <div className="space-y-3">
         {/* Opzione 1: Chef */}
         <button
@@ -41,7 +40,7 @@ function BackupIngredient({
             </div>
           </div>
         </button>
-
+        
         {/* Opzione 2: Contattami */}
         <button
           onClick={() => {
@@ -62,7 +61,7 @@ function BackupIngredient({
             </div>
           </div>
         </button>
-
+        
         {/* Opzione 3: Ingrediente specifico */}
         <button
           onClick={() => setBackupOption('specific')}
@@ -80,10 +79,10 @@ function BackupIngredient({
             </div>
           </div>
         </button>
-
+        
         {/* Dropdown ingrediente specifico */}
         {backupOption === 'specific' && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+          <div className="mt-4 p-4 bg-gray-50 rounded-xl animate-fadeIn">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Seleziona ingrediente riserva:
             </label>
@@ -103,7 +102,7 @@ function BackupIngredient({
           </div>
         )}
       </div>
-
+      
       <button
         onClick={nextStep}
         disabled={backupOption === 'specific' && !backupIngredient}
