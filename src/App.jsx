@@ -645,7 +645,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       if (bowl.bases && bowl.bases.length > 0) {
         msg += `◆ Base [N. ${bowl.bases.length}]:\n`
         bowl.bases.forEach(b => {
-          msg += `   🔸 ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n\n`
+          msg += `   → ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n\n`
         })
       }
       
@@ -653,7 +653,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       if (bowl.proteins && bowl.proteins.length > 0) {
         msg += `◆ Proteine [N. ${bowl.proteins.length}]:\n`
         bowl.proteins.forEach(p => {
-          msg += `   🔸 ${p.name}`
+          msg += `   → ${p.name}`
           if (p.isDouble) {
             msg += ` ✨ EXTRA x2`
           }
@@ -665,7 +665,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       if (bowl.ingredients && bowl.ingredients.length > 0) {
         msg += `◆ Verdure [N. ${bowl.ingredients.length}]:\n`
         bowl.ingredients.forEach(i => {
-          msg += `   🔸 ${i.name}`
+          msg += `   → ${i.name}`
           if (i.isDouble) {
             msg += ` ✨ EXTRA x2`
           }
@@ -677,7 +677,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       if (bowl.sauces && bowl.sauces.length > 0) {
         msg += `◆ Salse [N. ${bowl.sauces.length}]:\n`
         bowl.sauces.forEach(s => {
-          msg += `   🔸 ${s.name}\n\n`
+          msg += `   → ${s.name}\n\n`
         })
       }
       
@@ -685,7 +685,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       if (bowl.toppings && bowl.toppings.length > 0) {
         msg += `◆ Toppings [N. ${bowl.toppings.length}]:\n`
         bowl.toppings.forEach(t => {
-          msg += `   🔸 ${t.name}`
+          msg += `   → ${t.name}`
           if (t.isDouble) {
             msg += ` ✨ EXTRA x2`
           }
@@ -704,7 +704,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       beveragesList.forEach(([id, qty]) => {
         const bev = ingredients.find(i => i.id === parseInt(id))
         if (bev) {
-          msg += `   🔸 ${bev.name} ×${qty} - €${(bev.price * qty).toFixed(2)}\n\n`
+          msg += `   → ${bev.name} ×${qty} - €${(bev.price * qty).toFixed(2)}\n\n`
         }
       })
       msg += `\n`
