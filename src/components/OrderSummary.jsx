@@ -309,13 +309,7 @@ function OrderSummary({
           </div>
         )}
         
-        {orderType === 'delivery' && restaurant?.show_rider_compensation && restaurant?.rider_compensation_amount > 0 && (
-          <div className="flex justify-between text-sm text-green-600 mb-1 bg-green-50 p-2 rounded">
-            <span>💚 Compenso Rider dichiarato</span>
-            <span>€{parseFloat(restaurant.rider_compensation_amount).toFixed(2)}</span>
-          </div>
-        )}
-
+        
         {wantsFloorDelivery && (
           <div className="flex justify-between text-sm text-gray-700 mb-1">
             <span>Consegna al piano</span>
@@ -351,8 +345,16 @@ function OrderSummary({
               (di cui €{tipAmount.toFixed(2)} mancia rider)
             </p>
           )}
+          
+          {orderType === 'delivery' && restaurant?.show_rider_compensation && restaurant?.rider_compensation_amount > 0 && (
+            <div className="mt-3 pt-3 border-t border-green-200">
+              <p className="text-xs text-gray-600 mb-1">📋 Nota trasparenza:</p>
+              <p className="text-xs text-green-600">
+                💚 Compenso Rider dichiarato: €{parseFloat(restaurant.rider_compensation_amount).toFixed(2)}
+              </p>
+            </div>
+          )}
         </div>
-      </div>
 
       <button
         onClick={() => setShowConfirmPhone(true)}
