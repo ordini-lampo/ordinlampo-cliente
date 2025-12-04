@@ -20,9 +20,7 @@ import ExtrasSelection from './components/ExtrasSelection'
 import DiscountCode from './components/DiscountCode'
 import PaymentMethod from './components/PaymentMethod'
 import OrderSummary from './components/OrderSummary'
-import ConfirmationPopups from './components/ConfirmationPopups'
-import WhatsAppReminderPopup from './components/WhatsAppReminderPopup'
-import FeedbackPopup from './components/FeedbackPopup'
+import UnifiedCheckoutPopup from './components/UnifiedCheckoutPopup'
 
 // Componenti UI
 import LiveSummary from './components/LiveSummary'
@@ -57,10 +55,7 @@ function App() {
   // STATE - Navigazione
   // ============================================
   const [currentStep, setCurrentStep] = useState(0)
-  const [showConfirmPhone, setShowConfirmPhone] = useState(false)
-  const [showConfirmOrder, setShowConfirmOrder] = useState(false)
-  const [showWhatsAppReminder, setShowWhatsAppReminder] = useState(false)
-  const [showFeedback, setShowFeedback] = useState(false)
+  const [showUnifiedCheckout, setShowUnifiedCheckout] = useState(false)
   
   // ============================================
   // STATE - Ordine
@@ -994,7 +989,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
             activeSteps={activeSteps}
             
             // Conferma
-            setShowConfirmPhone={setShowConfirmPhone}
+            setShowUnifiedCheckout={setShowUnifiedCheckout}
           />
         )}
       </main>
@@ -1025,47 +1020,20 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
         />
       )}
 
-      {/* Popup Conferma Telefono */}
-      {showConfirmPhone && (
-        <ConfirmationPopups
-          type="phone"
-          phone={customerData.phone}
-          onConfirm={() => {
-            setShowConfirmPhone(false)
-            setShowConfirmOrder(true)
-          }}
-          onCancel={() => setShowConfirmPhone(false)}
-        />
-      )}
-
-      {/* Popup Conferma Ordine */}
-{showConfirmOrder && (
-        <ConfirmationPopups
-          type="order"
-          onConfirm={() => {
-            setShowConfirmOrder(false)
-            setShowWhatsAppReminder(true)
-          }}
-          onCancel={() => setShowConfirmOrder(false)}
-        />
-      )}
-
-      {showWhatsAppReminder && (
-        <WhatsAppReminderPopup
-          onConfirm={() => {
-            setShowWhatsAppReminder(false)
-            sendWhatsAppOrder()
-          }}
-          onCancel={() => setShowWhatsAppReminder(false)}
-        />
-      )}
-
-      {showFeedback && (
-        <FeedbackPopup
+      {/* Unified Checkout Popup */}
+      {showUnifiedCheckout && (
+        <UnifiedCheckoutPopup
+          customerData={customerData}
+          orderType={orderType}
           restaurant={restaurant}
-          onClose={() => setShowFeedback(false)}
+          onConfirm={sendWhatsAppOrder}
+          onCancel={() => setShowUnifiedCheckout(false)}
         />
       )}
+    </div>
+  )
+}
+
     </div>
   )
 }
