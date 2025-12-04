@@ -308,8 +308,7 @@ function OrderSummary({
             <span>€{parseFloat(selectedZone.delivery_fee).toFixed(2)}</span>
           </div>
         )}
-        
-        
+
         {wantsFloorDelivery && (
           <div className="flex justify-between text-sm text-gray-700 mb-1">
             <span>Consegna al piano</span>
@@ -355,6 +354,7 @@ function OrderSummary({
             </div>
           )}
         </div>
+      </div>
 
       <button
         onClick={() => setShowConfirmPhone(true)}
