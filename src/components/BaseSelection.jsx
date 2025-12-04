@@ -64,13 +64,17 @@ function BaseSelection({
                 }}
                 className="sr-only"
               />
-              <div className={`w-20 h-10 rounded-xl border-2 transition-all shadow-inner ${
-                isHalfHalf ? 'bg-green-500 border-green-700' : 'bg-gray-300 border-gray-400'
+              <div className={`w-24 h-12 rounded-xl border-3 transition-all shadow-lg ${
+                isHalfHalf 
+                  ? 'bg-green-500 border-green-700' 
+                  : 'bg-orange-400 border-orange-600'
               }`}>
-                <div className={`w-8 h-8 bg-white rounded-lg shadow-lg transform transition-all flex items-center justify-center text-base font-bold ${
-                  isHalfHalf ? 'translate-x-11 translate-y-1' : 'translate-x-1 translate-y-1'
+                <div className={`w-10 h-10 bg-white rounded-lg shadow-2xl transform transition-all flex items-center justify-center font-bold ${
+                  isHalfHalf 
+                    ? 'translate-x-13 translate-y-1 text-green-600 text-2xl' 
+                    : 'translate-x-1 translate-y-1 text-orange-600 text-2xl'
                 }`}>
-                  {isHalfHalf ? '✓' : '○'}
+                  {isHalfHalf ? '✓' : '✗'}
                 </div>
               </div>
             </div>
