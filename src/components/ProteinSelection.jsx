@@ -9,91 +9,129 @@ function ProteinSelection({
   const proteinIngredients = ingredients.filter(i => i.category_id === proteinCategory?.id)
   
   const maxProteins = proteinCategory?.max_selections || 2
-  const allowDouble = proteinCategory?.allow_double_portion
-  const doublePrice = proteinCategory?.double_portion_price || 0
-
+  const EXTRA_PORTION_PRICE = 2.50 // Prezzo hardcoded porzione extra
+  
   const toggleProtein = (protein) => {
     const existingIndex = selectedProteins.findIndex(p => p.id === protein.id)
     
     if (existingIndex >= 0) {
-      // Rimuovi
       setSelectedProteins(selectedProteins.filter(p => p.id !== protein.id))
     } else if (selectedProteins.length < maxProteins) {
-      // Aggiungi
-      setSelectedProteins([...selectedProteins, { ...protein, isDouble: false }])
+      setSelectedProteins([...selectedProteins, { ...protein, extraPortions: 0 }])
     }
   }
-
-  const toggleDouble = (proteinId) => {
-    setSelectedProteins(selectedProteins.map(p => 
-      p.id === proteinId ? { ...p, isDouble: !p.isDouble } : p
-    ))
+  
+  const updateExtraPortions = (proteinId, change) => {
+    setSelectedProteins(selectedProteins.map(p => {
+      if (p.id === proteinId) {
+        const newValue = Math.max(0, Math.min(5, p.extraPortions + change))
+        return { ...p, extraPortions: newValue }
+      }
+      return p
+    }))
   }
-
+  
   const canProceed = selectedProteins.length >= 1
-
+  
   return (
-    <div className="p-6 animate-fadeIn">
+    <div className="p-6 bg-gray-50 min-h-screen animate-fadeIn">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         🐟 Scegli le tue proteine
       </h2>
-      <p className="text-gray-500 mb-6">
+      <p className="text-gray-700 mb-6 font-medium">
         Seleziona fino a {maxProteins} proteine ({selectedProteins.length}/{maxProteins})
       </p>
-
-      <div className="space-y-3">
+      
+      <div className="space-y-4">
         {proteinIngredients.map((protein) => {
           const selected = selectedProteins.find(p => p.id === protein.id)
           const isSelected = !!selected
           const isDisabled = !isSelected && selectedProteins.length >= maxProteins
+          const extraTotal = selected ? selected.extraPortions * EXTRA_PORTION_PRICE : 0
           
           return (
-            <div
-              key={protein.id}
-              className={`p-4 rounded-xl border-2 transition-all ${
-                isSelected
-                  ? 'border-orange-500 bg-orange-50'
-                  : isDisabled
-                    ? 'border-gray-100 bg-gray-50 opacity-50'
-                    : 'border-gray-200 bg-white hover:border-orange-300'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => toggleProtein(protein)}
-                  disabled={isDisabled}
-                  className="flex-1 text-left"
-                >
-                  <p className="font-semibold text-gray-800">{protein.name}</p>
-                </button>
-                
-                {/* Bottone x2 */}
-                {isSelected && allowDouble && (
-                  <button
-                    onClick={() => toggleDouble(protein.id)}
-                    className={`ml-3 px-3 py-1 rounded-full text-sm font-bold transition-all ${
-                      selected.isDouble
-                        ? 'bg-pink-500 text-white'
-                        : 'bg-gray-200 text-gray-600 hover:bg-pink-100'
-                    }`}
-                  >
-                    ×2 {doublePrice > 0 && `+€${doublePrice.toFixed(2)}`}
-                  </button>
-                )}
-                
-                {/* Checkbox visivo */}
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ml-3 ${
-                  isSelected ? 'border-orange-500 bg-orange-500' : 'border-gray-300'
-                }`}>
-                  {isSelected && <span className="text-white text-sm">✓</span>}
+            <div key={protein.id} className="space-y-2">
+              {/* BOX 1: SELEZIONE PROTEINA */}
+              <button
+                onClick={() => toggleProtein(protein)}
+                disabled={isDisabled}
+                className={`w-full p-4 rounded-xl border-2 transition-all ${
+                  isSelected
+                    ? 'border-blue-500 bg-blue-50'
+                    : isDisabled
+                      ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                      : 'border-gray-300 bg-white hover:border-blue-400'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-gray-800 text-lg">{protein.name}</p>
+                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-400'
+                  }`}>
+                    {isSelected && <span className="text-white font-bold">✓</span>}
+                  </div>
                 </div>
-              </div>
+              </button>
+              
+              {/* BOX 2: COUNTER PORZIONI EXTRA */}
+              {isSelected && (
+                <div className="p-4 rounded-xl border-2 border-orange-400 bg-orange-50">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">
+                    🍱 Porzioni extra (€{EXTRA_PORTION_PRICE.toFixed(2)} cad.)
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => updateExtraPortions(protein.id, -1)}
+                        disabled={selected.extraPortions === 0}
+                        className={`w-12 h-12 rounded-lg font-bold text-2xl transition-all ${
+                          selected.extraPortions === 0
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-orange-500 text-white hover:bg-orange-600 shadow-md'
+                        }`}
+                      >
+                        −
+                      </button>
+                      
+                      <div className="w-16 h-12 bg-white rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-800">
+                          {selected.extraPortions}
+                        </span>
+                      </div>
+                      
+                      <button
+                        onClick={() => updateExtraPortions(protein.id, 1)}
+                        disabled={selected.extraPortions === 5}
+                        className={`w-12 h-12 rounded-lg font-bold text-2xl transition-all ${
+                          selected.extraPortions === 5
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-orange-500 text-white hover:bg-orange-600 shadow-md'
+                        }`}
+                      >
+                        +
+                      </button>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">Totale extra:</p>
+                      <p className="text-xl font-bold text-orange-600">
+                        €{extraTotal.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {selected.extraPortions > 0 && (
+                    <p className="text-xs text-gray-600 mt-2 text-center">
+                      {selected.extraPortions} × €{EXTRA_PORTION_PRICE.toFixed(2)} = €{extraTotal.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
       </div>
-
-      {/* Bottone continua */}
+      
       <button
         onClick={nextStep}
         disabled={!canProceed}
