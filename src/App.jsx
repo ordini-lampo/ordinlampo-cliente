@@ -783,10 +783,10 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
     msg += `\n`
     msg += `━━━━━━━━━━━━━━━━━━\n`
     const total = calculateTotal()
-msg += `\n▶ TOTALE: €${total.toFixed(2)}\n`
+msg += `\n→ TOTALE: €${total.toFixed(2)}\n`
     msg += `━━━━━━━━━━━━━━━━━━\n\n\n`
     
-    msg += `\n► Grazie per aver scelto ${restaurant.name}!\n`
+    msg += `\n➤ Grazie per aver scelto ${restaurant.name}!\n`
 msg += `Powered by Ordini-Lampo.it\n`
     
     return msg
