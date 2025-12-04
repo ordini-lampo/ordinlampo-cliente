@@ -1,193 +1,285 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
 
-function TimeSlot({ 
-  restaurant,
-  settings,
-  openingHours,
+export default function TimeSlot({ 
+  openingHours, 
+  specialClosures,
   selectedSlot, 
-  setSelectedSlot,
+  setSelectedSlot, 
   nextStep 
 }) {
-  const [slotCounts, setSlotCounts] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [availableDates, setAvailableDates] = useState([])
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [timeSlots, setTimeSlots] = useState([])
+  const [selectedTime, setSelectedTime] = useState(null)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
-  const now = new Date()
-  const today = now.toISOString().split('T')[0]
-  const currentTime = now.toTimeString().slice(0, 5)
-  const dayOfWeek = now.getDay()
-  
-  const todayHours = openingHours.find(h => h.day_of_week === dayOfWeek)
-  
-  // Genera fasce orarie
-  const generateSlots = (start, end, prefix) => {
-    const slots = []
-    const [startH, startM] = start.split(':').map(Number)
-    const [endH, endM] = end.split(':').map(Number)
-    
-    let currentH = startH
-    let currentM = startM
-    
-    while (currentH < endH || (currentH === endH && currentM < endM)) {
-      const nextM = currentM + 30
-      const nextH = currentM + 30 >= 60 ? currentH + 1 : currentH
-      const nextMNormalized = nextM >= 60 ? nextM - 60 : nextM
-      
-      const slotStart = `${String(currentH).padStart(2, '0')}:${String(currentM).padStart(2, '0')}`
-      const slotEnd = `${String(nextH).padStart(2, '0')}:${String(nextMNormalized).padStart(2, '0')}`
-      
-      slots.push({
-        id: `${prefix}-${slotStart}`,
-        label: `${prefix} ${slotStart}-${slotEnd}`,
-        time: slotStart,
-        isPast: slotStart < currentTime
-      })
-      
-      currentH = nextH
-      currentM = nextMNormalized
-    }
-    
-    return slots
-  }
-
-  const lunchSlots = todayHours?.lunch_enabled 
-    ? generateSlots(
-        todayHours.lunch_open || settings?.lunch_start || '11:00',
-        todayHours.lunch_close || settings?.lunch_end || '15:30',
-        '🍽️ PRANZO'
-      )
-    : []
-  
-  const dinnerSlots = todayHours?.dinner_enabled
-    ? generateSlots(
-        todayHours.dinner_open || settings?.dinner_start || '18:00',
-        todayHours.dinner_close || settings?.dinner_end || '23:30',
-        '🌙 CENA'
-      )
-    : []
-
-  // Carica conteggio slot
+  // Calcola date disponibili (prossimi 7 giorni)
   useEffect(() => {
-    const loadSlotCounts = async () => {
-      if (!settings?.enable_slot_limit) {
-        setLoading(false)
-        return
+    if (!openingHours || openingHours.length === 0) return
+
+    const dates = []
+    const today = new Date()
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today)
+      date.setDate(date.getDate() + i)
+      
+      const dayOfWeek = date.getDay()
+      const dayHours = openingHours.find(h => h.day_of_week === dayOfWeek)
+      
+      // Verifica se è un giorno di chiusura speciale
+      const dateString = date.toISOString().split('T')[0]
+      const isClosed = specialClosures?.some(c => c.closure_date === dateString)
+      
+      // Solo se locale aperto e non in chiusura speciale
+      if (dayHours && !dayHours.is_closed && !isClosed) {
+        dates.push({
+          date: date,
+          dateString: date.toLocaleDateString('it-IT'),
+          dayName: date.toLocaleDateString('it-IT', { weekday: 'long' }),
+          dayOfWeek: dayOfWeek,
+          hours: dayHours
+        })
       }
-      
-      const { data } = await supabase
-        .from('order_slots')
-        .select('slot_time, orders_count')
-        .eq('restaurant_id', restaurant.id)
-        .eq('slot_date', today)
-      
-      const counts = {}
-      data?.forEach(s => {
-        counts[s.slot_time] = s.orders_count
-      })
-      setSlotCounts(counts)
-      setLoading(false)
     }
     
-    loadSlotCounts()
-  }, [restaurant.id, today, settings?.enable_slot_limit])
+    setAvailableDates(dates)
+  }, [openingHours, specialClosures])
 
-  const maxPerSlot = settings?.max_orders_per_slot || 10
+  // Calcola fasce orarie quando cambia data selezionata
+  useEffect(() => {
+    if (!selectedDate) {
+      setTimeSlots([])
+      return
+    }
 
-  const SlotButton = ({ slot }) => {
-    const count = slotCounts[slot.time] || 0
-    const isFull = settings?.enable_slot_limit && count >= maxPerSlot
-    const isDisabled = slot.isPast || isFull
-    const isSelected = selectedSlot === slot.label
+    const slots = []
+    const now = new Date()
+    const isToday = selectedDate.date.toDateString() === now.toDateString()
+    const currentTime = now.getHours() * 60 + now.getMinutes()
+
+    // Pranzo
+    if (selectedDate.hours.lunch_enabled) {
+      const [lunchHour, lunchMin] = selectedDate.hours.lunch_open.split(':').map(Number)
+      const [lunchEndHour] = selectedDate.hours.lunch_close.split(':').map(Number)
+      const lunchStartTime = lunchHour * 60 + lunchMin
+      
+      // Se è oggi, mostra solo se non è ancora passato
+      if (!isToday || currentTime < lunchStartTime + 60) {
+        slots.push({
+          label: `Pranzo (${selectedDate.hours.lunch_open}-${selectedDate.hours.lunch_close})`,
+          value: `${selectedDate.hours.lunch_open}-${selectedDate.hours.lunch_close}`,
+          period: 'lunch',
+          openingTime: selectedDate.hours.lunch_open
+        })
+      }
+    }
+
+    // Cena
+    if (selectedDate.hours.dinner_enabled) {
+      const [dinnerHour, dinnerMin] = selectedDate.hours.dinner_open.split(':').map(Number)
+      const dinnerStartTime = dinnerHour * 60 + dinnerMin
+      
+      // Se è oggi, mostra solo se non è ancora passato
+      if (!isToday || currentTime < dinnerStartTime + 60) {
+        slots.push({
+          label: `Cena (${selectedDate.hours.dinner_open}-${selectedDate.hours.dinner_close})`,
+          value: `${selectedDate.hours.dinner_open}-${selectedDate.hours.dinner_close}`,
+          period: 'dinner',
+          openingTime: selectedDate.hours.dinner_open
+        })
+      }
+    }
+
+    setTimeSlots(slots)
+  }, [selectedDate])
+
+  const handleContinue = () => {
+    if (!selectedDate || !selectedTime) return
     
-    return (
-      <button
-        onClick={() => !isDisabled && setSelectedSlot(slot.label)}
-        disabled={isDisabled}
-        className={`p-3 rounded-xl border-2 text-center transition-all ${
-          isSelected
-            ? 'border-orange-500 bg-orange-50'
-            : isDisabled
-              ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-              : 'border-gray-200 bg-white hover:border-orange-300'
-        }`}
-      >
-        <p className="font-medium text-sm text-gray-800">
-          {slot.time}
-        </p>
-        {isFull && (
-          <p className="text-xs text-red-500">Esaurito</p>
-        )}
-        {slot.isPast && (
-          <p className="text-xs text-gray-400">Passato</p>
-        )}
-      </button>
-    )
+    // Combina data + orario
+    const combinedSlot = {
+      date: selectedDate.date,
+      dateString: selectedDate.dateString,
+      dayName: selectedDate.dayName,
+      time: selectedTime.value,
+      timeLabel: selectedTime.label,
+      openingTime: selectedTime.openingTime
+    }
+    
+    setSelectedSlot(combinedSlot)
+    setShowConfirmation(true)
   }
 
-  if (loading) {
+  const handleConfirm = () => {
+    setShowConfirmation(false)
+    nextStep()
+  }
+INIZIA DALLA RIGA import)
+  if (showConfirmation) {
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    
+    const isToday = selectedDate.date.toDateString() === today.toDateString()
+    const isTomorrow = selectedDate.date.toDateString() === tomorrow.toDateString()
+    
+    // Label: Oggi / Domani / Nome giorno (es. Sabato)
+    let dayLabel = selectedDate.dayName // default: nome giorno
+    if (isToday) dayLabel = 'Oggi'
+    if (isTomorrow) dayLabel = 'Domani'
+    
+    // Data estesa con giorno settimana (es. "Venerdì 5 dicembre 2025")
+    const fullDate = selectedDate.date.toLocaleDateString('it-IT', { 
+      weekday: 'long',
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    })
+    // Capitalize prima lettera
+    const fullDateCapitalized = fullDate.charAt(0).toUpperCase() + fullDate.slice(1)
+
     return (
-      <div className="p-6 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg max-w-md w-full p-6">
+          {/* Header */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-3xl">📅</span>
+            </div>
+          </div>
+          
+          <h3 className="text-xl font-bold text-center mb-4">
+            Conferma Data e Orario
+          </h3>
+          
+          {/* Riepilogo */}
+          <div className="bg-blue-50 rounded-lg p-4 mb-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-700 mb-2">
+                {dayLabel}
+              </div>
+              <div className="text-xl text-gray-800 font-semibold mb-1">
+                {fullDateCapitalized}
+              </div>
+              <div className="text-lg font-semibold text-blue-600 mt-3">
+                {selectedTime.label}
+              </div>
+            </div>
+          </div>
+          
+          {/* Info */}
+          <div className="space-y-3 mb-6">
+            <p className="text-gray-700">
+              Il tuo ordine è programmato per <strong>{fullDateCapitalized}</strong> durante la fascia oraria <strong>{selectedTime.value}</strong>.
+            </p>
+            
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">ℹ️ Nota:</span> Il locale aprirà alle ore <strong>{selectedTime.openingTime}</strong>. Il tuo ordine sarà preso in carico da quel momento.
+              </p>
+            </div>
+            
+            <p className="text-sm text-gray-600">
+              Riceverai conferma via WhatsApp con tutti i dettagli.
+            </p>
+          </div>
+          
+          {/* Pulsanti */}
+          <div className="space-y-3">
+            <button
+              onClick={handleConfirm}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-4 rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-lg"
+            >
+              ✅ CONFERMO - Procedi con l'ordine
+            </button>
+            
+            <button
+              onClick={() => setShowConfirmation(false)}
+              className="w-full bg-gray-200 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-300 transition"
+            >
+              ← Torna Indietro
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-6 animate-fadeIn">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        ⏰ Quando vuoi ricevere l'ordine?
-      </h2>
-      <p className="text-gray-500 mb-2">
-        Seleziona la fascia oraria preferita
-      </p>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-2">Quando vuoi ricevere l'ordine?</h2>
+      <p className="text-gray-600 mb-6">Scegli il giorno e la fascia oraria</p>
       
-      {/* FIX: Disclaimer migliorato con tolleranza ±20 min */}
-      <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl mb-6 text-sm text-blue-800 flex gap-3">
-        <span className="text-2xl">ℹ️</span>
-        <p>
-          L'orario selezionato è indicativo.<br/>
-          <strong>Tolleranza prevista: ±20 minuti.</strong><br/>
-          In caso di maltempo o traffico intenso, i tempi potrebbero allungarsi. Grazie per la comprensione! 
-        </p>
+      {/* SELETTORE DATA */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">1. Scegli il giorno</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {availableDates.map((dateObj, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedDate(dateObj)
+                setSelectedTime(null) // Reset orario
+              }}
+              className={`p-4 rounded-lg border-2 transition ${
+                selectedDate?.dateString === dateObj.dateString
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 hover:border-orange-200'
+              }`}
+            >
+              <div className="font-bold">
+                {idx === 0 ? 'Oggi' : idx === 1 ? 'Domani' : dateObj.dayName}
+              </div>
+              <div className="text-sm text-gray-600">{dateObj.dateString}</div>
+            </button>
+          ))}
+        </div>
       </div>
-
-      {/* Pranzo */}
-      {lunchSlots.length > 0 && (
+      
+      {/* SELETTORE ORARIO */}
+      {selectedDate && timeSlots.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-bold text-gray-700 mb-3">🍽️ PRANZO</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {lunchSlots.map(slot => (
-              <SlotButton key={slot.id} slot={slot} />
+          <h3 className="text-lg font-semibold mb-3">2. Scegli la fascia oraria</h3>
+          <div className="grid grid-cols-1 gap-3">
+            {timeSlots.map((slot, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedTime(slot)}
+                className={`p-4 rounded-lg border-2 transition ${
+                  selectedTime?.value === slot.value
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-gray-200 hover:border-orange-200'
+                }`}
+              >
+                <div className="font-semibold text-lg">{slot.label}</div>
+              </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Cena */}
-      {dinnerSlots.length > 0 && (
-        <div className="mb-6">
-          <h3 className="font-bold text-gray-700 mb-3">🌙 CENA</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {dinnerSlots.map(slot => (
-              <SlotButton key={slot.id} slot={slot} />
-            ))}
-          </div>
+      {selectedDate && timeSlots.length === 0 && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800">
+            Non ci sono fasce orarie disponibili per questo giorno. 
+            Per favore seleziona un altro giorno.
+          </p>
         </div>
       )}
-
+      
+      {/* PULSANTE CONTINUA */}
       <button
-        onClick={nextStep}
-        disabled={!selectedSlot}
-        className={`w-full mt-4 py-4 rounded-xl font-bold text-lg transition-all ${
-          selectedSlot
+        onClick={handleContinue}
+        disabled={!selectedDate || !selectedTime}
+        className={`w-full p-4 rounded-lg font-bold text-lg ${
+          selectedDate && selectedTime
             ? 'bg-orange-500 text-white hover:bg-orange-600'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
         }`}
       >
-        Continua →
+        {!selectedDate ? 'Seleziona un giorno' : !selectedTime ? 'Seleziona una fascia oraria' : 'Continua'}
       </button>
     </div>
   )
 }
-
-export default TimeSlot
