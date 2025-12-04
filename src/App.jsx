@@ -86,6 +86,11 @@ function App() {
   // Allergie
   const [selectedAllergies, setSelectedAllergies] = useState([])
   const [customAllergy, setCustomAllergy] = useState('')
+  const [specificIngredient1, setSpecificIngredient1] = useState('')
+  const [specificIngredient2, setSpecificIngredient2] = useState('')
+  
+  const [specificIngredient1, setSpecificIngredient1] = useState('')
+  const [specificIngredient2, setSpecificIngredient2] = useState('')
   
   // Fascia oraria
   const [selectedSlot, setSelectedSlot] = useState(null)
@@ -208,6 +213,18 @@ useEffect(() => {
 }, [selectedAllergies])
 
 useEffect(() => {
+  if (specificIngredient1) {
+    localStorage.setItem("ordinlampo_specific1", specificIngredient1)
+  }
+}, [specificIngredient1])
+
+useEffect(() => {
+  if (specificIngredient2) {
+    localStorage.setItem("ordinlampo_specific2", specificIngredient2)
+  }
+}, [specificIngredient2])
+
+useEffect(() => {
   if (orderType) {
     localStorage.setItem("ordinlampo_ordertype", orderType)
   }
@@ -268,6 +285,8 @@ useEffect(() => {
   const savedBases = localStorage.getItem("ordinlampo_bases")
   const savedHalfHalf = localStorage.getItem("ordinlampo_halfhalf")
   const savedAllergies = localStorage.getItem("ordinlampo_allergies")
+  const savedSpecific1 = localStorage.getItem("ordinlampo_specific1")
+  const savedSpecific2 = localStorage.getItem("ordinlampo_specific2")
   const savedOrderType = localStorage.getItem("ordinlampo_ordertype")
   const savedZone = localStorage.getItem("ordinlampo_zone")
   const savedStep = localStorage.getItem("ordinlampo_step")
@@ -307,6 +326,12 @@ useEffect(() => {
   }
   if (savedAllergies) {
     try { setSelectedAllergies(JSON.parse(savedAllergies)) } catch(e) {}
+  }
+  if (savedSpecific1) {
+  setSpecificIngredient1(savedSpecific1)
+  }
+  if (savedSpecific2) {
+  setSpecificIngredient2(savedSpecific2)
   }
   if (savedOrderType) {
     setOrderType(savedOrderType)
@@ -1124,6 +1149,10 @@ msg += `Powered by Ordini-Lampo.it\n`
             setSelectedAllergies={setSelectedAllergies}
             customAllergy={customAllergy}
             setCustomAllergy={setCustomAllergy}
+            specificIngredient1={specificIngredient1}
+            setSpecificIngredient1={setSpecificIngredient1}
+            specificIngredient2={specificIngredient2}
+            setSpecificIngredient2={setSpecificIngredient2}
             
             // Fascia oraria
             selectedSlot={selectedSlot}
