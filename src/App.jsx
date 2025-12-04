@@ -277,7 +277,7 @@ function App() {
         .eq('is_active', true)
       setDiscountCodes(codesData || [])
       
-      // ⚠️ CONTROLLI ORARI DISABILITATI
+      // ► CONTROLLI ORARI DISABILITATI
       // L'app è sempre accessibile - il cliente sceglie la fascia oraria desiderata
       
       // COMMENTATO: Verifica se ristorante accetta ordini
@@ -724,7 +724,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
     // Allergie
     if (selectedAllergies.length > 0 || customAllergy) {
-      msg += `⚠️  ALLERGIE: `
+      msg += `►  ALLERGIE: `
       const allergiesList = [...selectedAllergies]
       if (customAllergy) allergiesList.push(customAllergy)
       msg += allergiesList.join(', ') + '\n\n'
@@ -798,7 +798,7 @@ msg += `Powered by Ordini-Lampo.it\n`
     // 🛡️ VALVOLA SICUREZZA: Blocca ordini troppo lunghi per WhatsApp
     const encodedLength = encodeURIComponent(message).length
     if (encodedLength > 8000) {
-      alert("⚠️ L'ordine è troppo lungo per WhatsApp!\n\nPer favore:\n1. Riduci le note ordine\n2. Oppure dividi in due ordini separati\n\nGrazie!")
+      alert("► L'ordine è troppo lungo per WhatsApp!\n\nPer favore:\n1. Riduci le note ordine\n2. Oppure dividi in due ordini separati\n\nGrazie!")
       return // NON aprire WhatsApp
     }
     
