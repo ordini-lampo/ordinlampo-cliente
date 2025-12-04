@@ -160,6 +160,89 @@ function App() {
     }
   }, [bowls])
 
+  // 🛡️ LOCAL STORAGE COMPLETO - Salva TUTTO in tempo reale
+useEffect(() => {
+  if (selectedProteins.length > 0) {
+    localStorage.setItem("ordinlampo_proteins", JSON.stringify(selectedProteins))
+  }
+}, [selectedProteins])
+
+useEffect(() => {
+  if (selectedIngredients.length > 0) {
+    localStorage.setItem("ordinlampo_ingredients", JSON.stringify(selectedIngredients))
+  }
+}, [selectedIngredients])
+
+useEffect(() => {
+  if (selectedSauces.length > 0) {
+    localStorage.setItem("ordinlampo_sauces", JSON.stringify(selectedSauces))
+  }
+}, [selectedSauces])
+
+useEffect(() => {
+  if (selectedToppings.length > 0) {
+    localStorage.setItem("ordinlampo_toppings", JSON.stringify(selectedToppings))
+  }
+}, [selectedToppings])
+
+useEffect(() => {
+  if (selectedBowlType) {
+    localStorage.setItem("ordinlampo_bowltype", JSON.stringify(selectedBowlType))
+  }
+}, [selectedBowlType])
+
+useEffect(() => {
+  if (selectedBases.length > 0) {
+    localStorage.setItem("ordinlampo_bases", JSON.stringify(selectedBases))
+  }
+}, [selectedBases])
+
+useEffect(() => {
+  localStorage.setItem("ordinlampo_halfhalf", JSON.stringify(isHalfHalf))
+}, [isHalfHalf])
+
+useEffect(() => {
+  if (selectedAllergies.length > 0) {
+    localStorage.setItem("ordinlampo_allergies", JSON.stringify(selectedAllergies))
+  }
+}, [selectedAllergies])
+
+useEffect(() => {
+  if (orderType) {
+    localStorage.setItem("ordinlampo_ordertype", orderType)
+  }
+}, [orderType])
+
+useEffect(() => {
+  if (selectedZone) {
+    localStorage.setItem("ordinlampo_zone", JSON.stringify(selectedZone))
+  }
+}, [selectedZone])
+
+useEffect(() => {
+  if (currentStep > 0) {
+    localStorage.setItem("ordinlampo_step", currentStep.toString())
+  }
+}, [currentStep])
+
+useEffect(() => {
+  if (backupOption) {
+    localStorage.setItem("ordinlampo_backup", backupOption)
+  }
+}, [backupOption])
+
+useEffect(() => {
+  if (selectedSlot) {
+    localStorage.setItem("ordinlampo_slot", JSON.stringify(selectedSlot))
+  }
+}, [selectedSlot])
+
+useEffect(() => {
+  if (paymentMethod) {
+    localStorage.setItem("ordinlampo_payment", paymentMethod)
+  }
+}, [paymentMethod])
+
   useEffect(() => {
     if (Object.keys(selectedBeverages).length > 0) {
       localStorage.setItem("ordinlampo_beverages", JSON.stringify(selectedBeverages))
@@ -172,22 +255,78 @@ function App() {
     }
   }, [customerData])
 
-  // 🛡️ LOCAL STORAGE LOADER - Ripristina carrello al caricamento
-  useEffect(() => {
-    const savedBowls = localStorage.getItem("ordinlampo_bowls")
-    const savedBeverages = localStorage.getItem("ordinlampo_beverages")
-    const savedCustomer = localStorage.getItem("ordinlampo_customer")
-    
-    if (savedBowls) {
-      try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
-    }
-    if (savedBeverages) {
-      try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
-    }
-    if (savedCustomer) {
-      try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
-    }
-  }, [])
+  // 🛡️ LOCAL STORAGE LOADER - Ripristina tutto al caricamento
+useEffect(() => {
+  const savedBowls = localStorage.getItem("ordinlampo_bowls")
+  const savedBeverages = localStorage.getItem("ordinlampo_beverages")
+  const savedCustomer = localStorage.getItem("ordinlampo_customer")
+  const savedProteins = localStorage.getItem("ordinlampo_proteins")
+  const savedIngredients = localStorage.getItem("ordinlampo_ingredients")
+  const savedSauces = localStorage.getItem("ordinlampo_sauces")
+  const savedToppings = localStorage.getItem("ordinlampo_toppings")
+  const savedBowlType = localStorage.getItem("ordinlampo_bowltype")
+  const savedBases = localStorage.getItem("ordinlampo_bases")
+  const savedHalfHalf = localStorage.getItem("ordinlampo_halfhalf")
+  const savedAllergies = localStorage.getItem("ordinlampo_allergies")
+  const savedOrderType = localStorage.getItem("ordinlampo_ordertype")
+  const savedZone = localStorage.getItem("ordinlampo_zone")
+  const savedStep = localStorage.getItem("ordinlampo_step")
+  const savedBackup = localStorage.getItem("ordinlampo_backup")
+  const savedSlot = localStorage.getItem("ordinlampo_slot")
+  const savedPayment = localStorage.getItem("ordinlampo_payment")
+  
+  if (savedBowls) {
+    try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
+  }
+  if (savedBeverages) {
+    try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
+  }
+  if (savedCustomer) {
+    try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
+  }
+  if (savedProteins) {
+    try { setSelectedProteins(JSON.parse(savedProteins)) } catch(e) {}
+  }
+  if (savedIngredients) {
+    try { setSelectedIngredients(JSON.parse(savedIngredients)) } catch(e) {}
+  }
+  if (savedSauces) {
+    try { setSelectedSauces(JSON.parse(savedSauces)) } catch(e) {}
+  }
+  if (savedToppings) {
+    try { setSelectedToppings(JSON.parse(savedToppings)) } catch(e) {}
+  }
+  if (savedBowlType) {
+    try { setSelectedBowlType(JSON.parse(savedBowlType)) } catch(e) {}
+  }
+  if (savedBases) {
+    try { setSelectedBases(JSON.parse(savedBases)) } catch(e) {}
+  }
+  if (savedHalfHalf) {
+    try { setIsHalfHalf(JSON.parse(savedHalfHalf)) } catch(e) {}
+  }
+  if (savedAllergies) {
+    try { setSelectedAllergies(JSON.parse(savedAllergies)) } catch(e) {}
+  }
+  if (savedOrderType) {
+    setOrderType(savedOrderType)
+  }
+  if (savedZone) {
+    try { setSelectedZone(JSON.parse(savedZone)) } catch(e) {}
+  }
+  if (savedStep) {
+    try { setCurrentStep(parseInt(savedStep)) } catch(e) {}
+  }
+  if (savedBackup) {
+    setBackupOption(savedBackup)
+  }
+  if (savedSlot) {
+    try { setSelectedSlot(JSON.parse(savedSlot)) } catch(e) {}
+  }
+  if (savedPayment) {
+    setPaymentMethod(savedPayment)
+  }
+}, [])
 
   const loadRestaurantData = async () => {
     try {
