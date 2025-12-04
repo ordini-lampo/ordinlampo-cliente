@@ -16,10 +16,8 @@ function BaseSelection({
     const existingIndex = selectedBases.findIndex(b => b.id === base.id)
     
     if (existingIndex >= 0) {
-      // Rimuovi
       setSelectedBases(selectedBases.filter(b => b.id !== base.id))
     } else if (selectedBases.length < maxBases) {
-      // Aggiungi
       setSelectedBases([...selectedBases, base])
     }
   }
@@ -41,10 +39,10 @@ function BaseSelection({
       
       {/* Toggle 50/50 - SUPER VISIBILE */}
       {baseCategory?.allow_half_half && (
-        <div className={`mb-6 p-4 rounded-lg border-3 transition-all ${
+        <div className={`mb-6 p-4 rounded-xl border-4 shadow-lg transition-all ${
           isHalfHalf 
-            ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500 shadow-lg' 
-            : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-400'
+            ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500' 
+            : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-500'
         }`}>
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-3">
@@ -66,13 +64,13 @@ function BaseSelection({
                 }}
                 className="sr-only"
               />
-             <div className={`w-20 h-10 rounded-md transition-all shadow-md ${
-                isHalfHalf ? 'bg-green-500' : 'bg-gray-400'
+              <div className={`w-20 h-10 rounded-xl border-2 transition-all shadow-inner ${
+                isHalfHalf ? 'bg-green-500 border-green-700' : 'bg-gray-300 border-gray-400'
               }`}>
-                <div className={`w-8 h-8 bg-white rounded shadow-lg transform transition-all mt-1 flex items-center justify-center text-lg ${
-                  isHalfHalf ? 'translate-x-11' : 'translate-x-1'
+                <div className={`w-8 h-8 bg-white rounded-lg shadow-lg transform transition-all flex items-center justify-center text-base font-bold ${
+                  isHalfHalf ? 'translate-x-11 translate-y-1' : 'translate-x-1 translate-y-1'
                 }`}>
-                  {isHalfHalf ? '✓' : ''}
+                  {isHalfHalf ? '✓' : '○'}
                 </div>
               </div>
             </div>
@@ -80,13 +78,13 @@ function BaseSelection({
         </div>
       )}
       
-     <p className="text-gray-700 mb-6 font-medium">
+      <p className="text-gray-700 mb-6 font-medium">
         {isHalfHalf 
           ? `Seleziona 2 basi (${selectedBases.length}/2)` 
           : `Seleziona 1 base (${selectedBases.length}/1)`}
       </p>
 
-     <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {baseIngredients.map((base) => {
           const isSelected = selectedBases.some(b => b.id === base.id)
           const isDisabled = !isSelected && selectedBases.length >= maxBases
@@ -113,7 +111,6 @@ function BaseSelection({
         })}
       </div>
 
-      {/* Bottone continua */}
       <button
         onClick={handleNext}
         disabled={!canProceed}
