@@ -78,7 +78,8 @@ function BaseSelection({
             </div>
           </label>
         </div>
-
+      )}
+      
       <p className="text-gray-500 mb-6">
         {isHalfHalf 
           ? `Seleziona 2 basi (${selectedBases.length}/2)` 
