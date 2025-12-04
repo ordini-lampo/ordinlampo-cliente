@@ -409,41 +409,79 @@ function App() {
     
     let price = bowl.bowlType?.price || 0
     
-    // Extra proteine
+    // ✅ PORZIONI EXTRA PROTEINE (€2.50 cad.)
+    const PROTEIN_EXTRA_PRICE = 2.50
+    bowl.proteins?.forEach(p => {
+      if (p.extraPortions && p.extraPortions > 0) {
+        price += p.extraPortions * PROTEIN_EXTRA_PRICE
+      }
+      // Vecchio sistema isDouble (compatibilità)
+      if (p.isDouble) {
+        const proteinCategory = categories.find(c => c.name === 'proteine')
+        price += proteinCategory?.double_portion_price || 0
+      }
+    })
+    
+    // Extra proteine oltre il max
     const proteinCategory = categories.find(c => c.name === 'proteine')
     if (proteinCategory) {
-      bowl.proteins?.forEach(p => {
-        if (p.isDouble) price += proteinCategory.double_portion_price || 0
-      })
       const extraProteins = (bowl.proteins?.length || 0) - proteinCategory.max_selections
-      if (extraProteins > 0) price += extraProteins * proteinCategory.extra_price
+      if (extraProteins > 0) price += extraProteins * (proteinCategory.extra_price || 0)
     }
     
-    // Extra ingredienti
+    // ✅ PORZIONI EXTRA INGREDIENTI (€1.50 cad.)
+    const INGREDIENT_EXTRA_PRICE = 1.50
+    bowl.ingredients?.forEach(i => {
+      if (i.extraPortions && i.extraPortions > 0) {
+        price += i.extraPortions * INGREDIENT_EXTRA_PRICE
+      }
+      // Vecchio sistema isDouble (compatibilità)
+      if (i.isDouble) {
+        const ingredientsCategory = categories.find(c => c.name === 'ingredienti')
+        price += ingredientsCategory?.double_portion_price || 0
+      }
+    })
+    
+    // Extra ingredienti oltre il max
     const ingredientsCategory = categories.find(c => c.name === 'ingredienti')
     if (ingredientsCategory) {
-      bowl.ingredients?.forEach(i => {
-        if (i.isDouble) price += ingredientsCategory.double_portion_price || 0
-      })
       const extraIngredients = (bowl.ingredients?.length || 0) - ingredientsCategory.max_selections
-      if (extraIngredients > 0) price += extraIngredients * ingredientsCategory.extra_price
+      if (extraIngredients > 0) price += extraIngredients * (ingredientsCategory.extra_price || 0)
     }
     
-    // Extra salse
+    // ✅ PORZIONI EXTRA SALSE (€0.80 cad.)
+    const SAUCE_EXTRA_PRICE = 0.80
+    bowl.sauces?.forEach(s => {
+      if (s.extraPortions && s.extraPortions > 0) {
+        price += s.extraPortions * SAUCE_EXTRA_PRICE
+      }
+    })
+    
+    // Extra salse oltre il max
     const sauceCategory = categories.find(c => c.name === 'salse')
     if (sauceCategory) {
       const extraSauces = (bowl.sauces?.length || 0) - sauceCategory.max_selections
-      if (extraSauces > 0) price += extraSauces * sauceCategory.extra_price
+      if (extraSauces > 0) price += extraSauces * (sauceCategory.extra_price || 0)
     }
     
-    // Extra topping
+    // ✅ PORZIONI EXTRA TOPPING (€2.00 cad.)
+    const TOPPING_EXTRA_PRICE = 2.00
+    bowl.toppings?.forEach(t => {
+      if (t.extraPortions && t.extraPortions > 0) {
+        price += t.extraPortions * TOPPING_EXTRA_PRICE
+      }
+      // Vecchio sistema isDouble (compatibilità)
+      if (t.isDouble) {
+        const toppingCategory = categories.find(c => c.name === 'topping')
+        price += toppingCategory?.double_portion_price || 0
+      }
+    })
+    
+    // Extra topping oltre il max
     const toppingCategory = categories.find(c => c.name === 'topping')
     if (toppingCategory) {
-      bowl.toppings?.forEach(t => {
-        if (t.isDouble) price += toppingCategory.double_portion_price || 0
-      })
       const extraToppings = (bowl.toppings?.length || 0) - toppingCategory.max_selections
-      if (extraToppings > 0) price += extraToppings * toppingCategory.extra_price
+      if (extraToppings > 0) price += extraToppings * (toppingCategory.extra_price || 0)
     }
     
     return price
