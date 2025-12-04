@@ -1034,8 +1034,4 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
   )
 }
 
-    </div>
-  )
-}
-
 export default App
