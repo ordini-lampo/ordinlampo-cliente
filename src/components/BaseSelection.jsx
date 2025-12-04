@@ -41,7 +41,7 @@ function BaseSelection({
       
       {/* Toggle 50/50 - SUPER VISIBILE */}
       {baseCategory?.allow_half_half && (
-        <div className={`mb-6 p-5 rounded-2xl border-4 transition-all ${
+        <div className={`mb-6 p-4 rounded-lg border-3 transition-all ${
           isHalfHalf 
             ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500 shadow-lg' 
             : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-400'
@@ -66,10 +66,10 @@ function BaseSelection({
                 }}
                 className="sr-only"
               />
-              <div className={`w-20 h-10 rounded-full transition-all shadow-md ${
+             <div className={`w-20 h-10 rounded-md transition-all shadow-md ${
                 isHalfHalf ? 'bg-green-500' : 'bg-gray-400'
               }`}>
-                <div className={`w-8 h-8 bg-white rounded-full shadow-lg transform transition-all mt-0.5 flex items-center justify-center text-lg ${
+                <div className={`w-8 h-8 bg-white rounded shadow-lg transform transition-all mt-1 flex items-center justify-center text-lg ${
                   isHalfHalf ? 'translate-x-11' : 'translate-x-1'
                 }`}>
                   {isHalfHalf ? '✓' : ''}
@@ -86,7 +86,7 @@ function BaseSelection({
           : `Seleziona 1 base (${selectedBases.length}/1)`}
       </p>
 
-      <div className="grid grid-cols-2 gap-3">
+     <div className="grid grid-cols-2 gap-4">
         {baseIngredients.map((base) => {
           const isSelected = selectedBases.some(b => b.id === base.id)
           const isDisabled = !isSelected && selectedBases.length >= maxBases
@@ -96,7 +96,7 @@ function BaseSelection({
               key={base.id}
               onClick={() => toggleBase(base)}
               disabled={isDisabled}
-              className={`p-4 rounded-xl border-2 transition-all text-center ${
+              className={`p-3 rounded-lg border-2 transition-all text-center ${
                 isSelected
                   ? 'border-orange-500 bg-orange-50'
                   : isDisabled
