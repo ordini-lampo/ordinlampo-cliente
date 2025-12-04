@@ -782,10 +782,11 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
     msg += `\n`
     msg += `━━━━━━━━━━━━━━━━━━\n`
-    msg += `💰 TOTALE: €${calculateTotal().toFixed(2)}\n`
+    msg += `\n▶ TOTALE: €${total.toFixed(2)}\n`
     msg += `━━━━━━━━━━━━━━━━━━\n\n\n`
     
-    msg += `🍜 Grazie per aver scelto ${restaurant.name}!`
+    msg += `\n► Grazie per aver scelto ${restaurant.name}!\n`
+msg += `Powered by Ordini-Lampo.it\n`
     
     return msg
   }
