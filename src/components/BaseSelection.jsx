@@ -78,15 +78,6 @@ function BaseSelection({
             </div>
           </label>
         </div>
-      )}
-```
-                  isHalfHalf ? 'translate-x-7' : 'translate-x-1'
-                }`} />
-              </div>
-            </div>
-          </label>
-        </div>
-      )}
 
       <p className="text-gray-500 mb-6">
         {isHalfHalf 
