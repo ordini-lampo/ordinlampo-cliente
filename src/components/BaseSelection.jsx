@@ -34,7 +34,7 @@ function BaseSelection({
   }
 
   return (
-    <div className="p-6 animate-fadeIn">
+    <div className="p-6 bg-gray-50 min-h-screen animate-fadeIn">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">
         🍚 Scegli la tua base
       </h2>
@@ -44,7 +44,7 @@ function BaseSelection({
         <div className={`mb-6 p-5 rounded-2xl border-4 transition-all ${
           isHalfHalf 
             ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500 shadow-lg' 
-            : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-400 animate-pulse'
+            : 'bg-gradient-to-r from-orange-50 to-orange-100 border-orange-400'
         }`}>
           <label className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ function BaseSelection({
               <div className={`w-20 h-10 rounded-full transition-all shadow-md ${
                 isHalfHalf ? 'bg-green-500' : 'bg-gray-400'
               }`}>
-                <div className={`w-8 h-8 bg-white rounded-full shadow-lg transform transition-all mt-1 flex items-center justify-center text-lg ${
+                <div className={`w-8 h-8 bg-white rounded-full shadow-lg transform transition-all mt-0.5 flex items-center justify-center text-lg ${
                   isHalfHalf ? 'translate-x-11' : 'translate-x-1'
                 }`}>
                   {isHalfHalf ? '✓' : ''}
@@ -80,7 +80,7 @@ function BaseSelection({
         </div>
       )}
       
-      <p className="text-gray-500 mb-6">
+     <p className="text-gray-700 mb-6 font-medium">
         {isHalfHalf 
           ? `Seleziona 2 basi (${selectedBases.length}/2)` 
           : `Seleziona 1 base (${selectedBases.length}/1)`}
