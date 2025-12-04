@@ -1059,11 +1059,8 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
           onCancel={() => setShowWhatsAppReminder(false)}
         />
       )}
-    </div>
-  )
-}
 
- {showFeedback && (
+      {showFeedback && (
         <FeedbackPopup
           restaurant={restaurant}
           onClose={() => setShowFeedback(false)}
