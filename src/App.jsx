@@ -89,9 +89,6 @@ function App() {
   const [specificIngredient1, setSpecificIngredient1] = useState('')
   const [specificIngredient2, setSpecificIngredient2] = useState('')
   
-  const [specificIngredient1, setSpecificIngredient1] = useState('')
-  const [specificIngredient2, setSpecificIngredient2] = useState('')
-  
   // Fascia oraria
   const [selectedSlot, setSelectedSlot] = useState(null)
   
