@@ -22,6 +22,7 @@ import PaymentMethod from './components/PaymentMethod'
 import OrderSummary from './components/OrderSummary'
 import ConfirmationPopups from './components/ConfirmationPopups'
 import WhatsAppReminderPopup from './components/WhatsAppReminderPopup'
+import FeedbackPopup from './components/FeedbackPopup'
 
 // Componenti UI
 import LiveSummary from './components/LiveSummary'
@@ -59,6 +60,7 @@ function App() {
   const [showConfirmPhone, setShowConfirmPhone] = useState(false)
   const [showConfirmOrder, setShowConfirmOrder] = useState(false)
   const [showWhatsAppReminder, setShowWhatsAppReminder] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
   
   // ============================================
   // STATE - Ordine
@@ -857,8 +859,11 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       console.error('Errore salvataggio ordine:', err)
     }
     
-    // Apri WhatsApp
+      // Apri WhatsApp
     window.open(whatsappUrl, '_blank')
+    
+    // Mostra feedback dopo 1 secondo
+    setTimeout(() => setShowFeedback(true), 1000)
   }
 
   // ============================================
@@ -1052,6 +1057,16 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
             sendWhatsAppOrder()
           }}
           onCancel={() => setShowWhatsAppReminder(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+ {showFeedback && (
+        <FeedbackPopup
+          restaurant={restaurant}
+          onClose={() => setShowFeedback(false)}
         />
       )}
     </div>
