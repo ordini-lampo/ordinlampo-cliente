@@ -6,12 +6,14 @@ function AllergiesSelection({
   customAllergy,
   setCustomAllergy,
   ingredients,
+  specificIngredient1,
+  setSpecificIngredient1,
+  specificIngredient2,
+  setSpecificIngredient2,
   nextStep 
 }) {
   const [hasAllergies, setHasAllergies] = useState(null) // null | true | false
   const [confirmedNoAllergies, setConfirmedNoAllergies] = useState(false)
-  const [specificIngredient1, setSpecificIngredient1] = useState('')
-  const [specificIngredient2, setSpecificIngredient2] = useState('')
   
   const commonAllergies = [
     { id: 'crostacei', name: 'Crostacei', icon: '🦐' },
