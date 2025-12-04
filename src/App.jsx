@@ -638,7 +638,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
     // Bowl
     allBowls.forEach((bowl, idx) => {
-      msg += `🍜 BOWL #${idx + 1} (${bowl.bowlType.name})\n`
+      msg += `► BOWL #${idx + 1} (${bowl.bowlType.name})\n`
       msg += `━━━━━━━━━━━━━━━━━━\n\n`
       
       // Base
@@ -712,7 +712,7 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
     
     // Riserva
     if (settings?.enable_backup_ingredient && backupOption) {
-      msg += `🔄 RISERVA: `
+      msg += `► RISERVA: `
       if (backupOption === 'chef_choice') {
         msg += `Sostituire a discrezione dello chef\n`
       } else if (backupOption === 'contact_me') {
