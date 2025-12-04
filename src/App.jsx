@@ -21,6 +21,7 @@ import DiscountCode from './components/DiscountCode'
 import PaymentMethod from './components/PaymentMethod'
 import OrderSummary from './components/OrderSummary'
 import ConfirmationPopups from './components/ConfirmationPopups'
+import WhatsAppReminderPopup from './components/WhatsAppReminderPopup'
 
 // Componenti UI
 import LiveSummary from './components/LiveSummary'
@@ -57,6 +58,7 @@ function App() {
   const [currentStep, setCurrentStep] = useState(0)
   const [showConfirmPhone, setShowConfirmPhone] = useState(false)
   const [showConfirmOrder, setShowConfirmOrder] = useState(false)
+  const [showWhatsAppReminder, setShowWhatsAppReminder] = useState(false)
   
   // ============================================
   // STATE - Ordine
@@ -1032,14 +1034,24 @@ msg += `➤ N. Ordine: #${orderNumber}\n\n`
       )}
 
       {/* Popup Conferma Ordine */}
-      {showConfirmOrder && (
+{showConfirmOrder && (
         <ConfirmationPopups
           type="order"
           onConfirm={() => {
             setShowConfirmOrder(false)
-            sendWhatsAppOrder()
+            setShowWhatsAppReminder(true)
           }}
           onCancel={() => setShowConfirmOrder(false)}
+        />
+      )}
+
+      {showWhatsAppReminder && (
+        <WhatsAppReminderPopup
+          onConfirm={() => {
+            setShowWhatsAppReminder(false)
+            sendWhatsAppOrder()
+          }}
+          onCancel={() => setShowWhatsAppReminder(false)}
         />
       )}
     </div>
