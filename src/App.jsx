@@ -13,7 +13,7 @@ import SauceSelection from './components/SauceSelection'
 import ToppingSelection from './components/ToppingSelection'
 import BeveragesSelection from './components/BeveragesSelection'
 import BackupIngredient from './components/BackupIngredient'
-import AllergiesSelection from './components/AllergiesSelection'
+import AllergiesSelection from './components/AllergiesSelection'ingredients={ingredients}
 import TimeSlot from './components/TimeSlot'
 import CustomerData from './components/CustomerData'
 import ExtrasSelection from './components/ExtrasSelection'
