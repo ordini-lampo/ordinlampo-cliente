@@ -1036,13 +1036,16 @@ msg += `Powered by Ordini-Lampo.it\n`
       
       // Incrementa contatore slot
       if (selectedSlot) {
-        const slotDate = typeof selectedSlot === 'object' 
-          ? selectedSlot.date.toISOString().split('T')[0]
-          : new Date().toISOString().split('T')[0]
-          
-        const slotTime = typeof selectedSlot === 'object'
-          ? selectedSlot.time
-          : selectedSlot
+  // Fix: gestisce correttamente sia Date object che stringhe
+  const slotDate = typeof selectedSlot === 'object' && selectedSlot.date
+    ? (selectedSlot.date instanceof Date 
+        ? selectedSlot.date.toISOString().split('T')[0]
+        : selectedSlot.date) // Se è già una stringa, usala direttamente
+    : new Date().toISOString().split('T')[0]
+    
+  const slotTime = typeof selectedSlot === 'object'
+    ? selectedSlot.time
+    : selectedSlot
           
         await supabase.rpc('increment_slot_count', {
           p_restaurant_id: restaurant.id,
