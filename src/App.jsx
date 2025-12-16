@@ -29,15 +29,9 @@ import LoadingScreen from './components/LoadingScreen'
 import ErrorScreen from './components/ErrorScreen'
 import ClosedScreen from './components/ClosedScreen'
 
-// ============================================
-// 🔧 CONFIG - Edge Function URL
-// ============================================
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// ============================================
-// 🛡️ PATCH 1: Session Key BULLDOZER (mai "unknown")
-// ============================================
 function getSessionKeySafe() {
   try {
     const k = localStorage.getItem("ol_session_key")
@@ -53,17 +47,11 @@ function getSessionKeySafe() {
   }
 }
 
-// ============================================
-// 🛡️ PATCH 2: Dedup Key Generator
-// ============================================
 function newDedupKey() {
   return "chk_" + Date.now() + "_" + Math.random().toString(16).slice(2)
 }
 
 function App() {
-  // ============================================
-  // STATE - Dati Ristorante
-  // ============================================
   const [restaurant, setRestaurant] = useState(null)
   const [settings, setSettings] = useState(null)
   const [locations, setLocations] = useState([])
@@ -73,37 +61,23 @@ function App() {
   const [openingHours, setOpeningHours] = useState([])
   const [specialClosures, setSpecialClosures] = useState([])
   const [discountCodes, setDiscountCodes] = useState([])
+  const [slotAvailability, setSlotAvailability] = useState({})
   
-  // ============================================
-  // STATE - Caricamento
-  // ============================================
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isClosed, setIsClosed] = useState(false)
   const [closedMessage, setClosedMessage] = useState('')
   
-  // ============================================
-  // STATE - Navigazione
-  // ============================================
   const [currentStep, setCurrentStep] = useState(0)
   const [showUnifiedCheckout, setShowUnifiedCheckout] = useState(false)
-  
-  // ============================================
-  // 🛡️ PATCH 2: Dedup Key State (anti doppio ordine)
-  // ============================================
   const [checkoutDedupKey, setCheckoutDedupKey] = useState(null)
   
-  // ============================================
-  // STATE - Ordine
-  // ============================================
   const [orderType, setOrderType] = useState(null)
   const [selectedZone, setSelectedZone] = useState(null)
   
-  // Multi-bowl support
   const [bowls, setBowls] = useState([])
   const [currentBowlIndex, setCurrentBowlIndex] = useState(0)
   
-  // Bowl corrente
   const [selectedBowlType, setSelectedBowlType] = useState(null)
   const [selectedBases, setSelectedBases] = useState([])
   const [isHalfHalf, setIsHalfHalf] = useState(false)
@@ -112,23 +86,18 @@ function App() {
   const [selectedSauces, setSelectedSauces] = useState([])
   const [selectedToppings, setSelectedToppings] = useState([])
   
-  // Bevande
   const [selectedBeverages, setSelectedBeverages] = useState({})
   
-  // Ingrediente riserva
   const [backupOption, setBackupOption] = useState('chef_choice')
   const [backupIngredient, setBackupIngredient] = useState(null)
   
-  // Allergie
   const [selectedAllergies, setSelectedAllergies] = useState([])
   const [customAllergy, setCustomAllergy] = useState('')
   const [specificIngredient1, setSpecificIngredient1] = useState('')
   const [specificIngredient2, setSpecificIngredient2] = useState('')
   
-  // Fascia oraria
   const [selectedSlot, setSelectedSlot] = useState(null)
   
-  // Dati cliente
   const [customerData, setCustomerData] = useState({
     name: '',
     surname: '',
@@ -141,26 +110,16 @@ function App() {
     notesAddress: ''
   })
   
-  // Extras
   const [wantsCutlery, setWantsCutlery] = useState(false)
   const [wantsFloorDelivery, setWantsFloorDelivery] = useState(false)
   const [tipAmount, setTipAmount] = useState(0)
   
-  // Sconto
   const [appliedDiscount, setAppliedDiscount] = useState(null)
-  
-  // Pagamento
   const [paymentMethod, setPaymentMethod] = useState(null)
   
-  // ============================================
-  // STATE - Cliente precedente
-  // ============================================
   const [previousCustomer, setPreviousCustomer] = useState(null)
   const [previousOrder, setPreviousOrder] = useState(null)
 
-  // ============================================
-  // DEFINIZIONE STEPS
-  // ============================================
   const steps = [
     { id: 'welcome', name: 'Benvenuto', component: Welcome },
     { id: 'order-type', name: 'Tipo Ordine', component: OrderType },
@@ -182,12 +141,8 @@ function App() {
     { id: 'summary', name: 'Riepilogo', component: OrderSummary }
   ]
   
-  // Filtra steps attivi
   const activeSteps = steps.filter(step => !step.condition || step.condition())
 
-  // ============================================
-  // 🛡️ PATCH 4: Fail-fast se mancano env
-  // ============================================
   useEffect(() => {
     if (!SUPABASE_URL || !SUPABASE_ANON) {
       setError("Configurazione mancante. Contatta il supporto.")
@@ -195,18 +150,12 @@ function App() {
     }
   }, [])
 
-  // ============================================
-  // 🛡️ PATCH 3: Clamp step (anti schermo vuoto)
-  // ============================================
   useEffect(() => {
     if (currentStep < 0 || currentStep >= activeSteps.length) {
       setCurrentStep(0)
     }
   }, [activeSteps.length, currentStep])
 
-  // ============================================
-  // 🛡️ PATCH 2: Dedup key stabile per checkout
-  // ============================================
   useEffect(() => {
     if (showUnifiedCheckout && !checkoutDedupKey) {
       setCheckoutDedupKey(newDedupKey())
@@ -216,21 +165,16 @@ function App() {
     }
   }, [showUnifiedCheckout, checkoutDedupKey])
 
-  // ============================================
-  // CARICAMENTO DATI INIZIALE
-  // ============================================
   useEffect(() => {
     loadRestaurantData()
   }, [])
 
-  // 🛡️ LOCAL STORAGE SAVER - Salva carrello automaticamente
   useEffect(() => {
     if (bowls.length > 0) {
       localStorage.setItem("ordinlampo_bowls", JSON.stringify(bowls))
     }
   }, [bowls])
 
-  // 🛡️ LOCAL STORAGE COMPLETO - Salva TUTTO in tempo reale
   useEffect(() => {
     if (selectedProteins.length > 0) {
       localStorage.setItem("ordinlampo_proteins", JSON.stringify(selectedProteins))
@@ -337,7 +281,6 @@ function App() {
     }
   }, [customerData])
 
-  // 🛡️ LOCAL STORAGE LOADER - Ripristina tutto al caricamento
   useEffect(() => {
     const savedBowls = localStorage.getItem("ordinlampo_bowls")
     const savedBeverages = localStorage.getItem("ordinlampo_beverages")
@@ -418,9 +361,6 @@ function App() {
     }
   }, [])
 
-  // ============================================
-  // 🚀 BULLDOZER: loadRestaurantData via Edge Function
-  // ============================================
   const loadRestaurantData = async () => {
     try {
       setLoading(true)
@@ -428,7 +368,6 @@ function App() {
       const urlParams = new URLSearchParams(window.location.search)
       const slug = (urlParams.get('r') || 'pokenjoy-sanremo').trim()
       
-      // 🚀 1 SOLA CHIAMATA invece di 8 query!
       const res = await fetch(
         SUPABASE_URL + "/functions/v1/get-restaurant-bundle?slug=" + encodeURIComponent(slug),
         {
@@ -440,13 +379,11 @@ function App() {
       )
 
       const data = await res.json()
-
       if (!res.ok) {
         console.error("Bundle load failed:", data)
         throw new Error(data?.error || "Errore caricamento ristorante")
       }
 
-      // Set state (tutto in un colpo!)
       setRestaurant(data.restaurant)
       setSettings(data.settings || {})
       setLocations(data.locations || [])
@@ -457,10 +394,32 @@ function App() {
       setSpecialClosures(data.special_closures || [])
       setDiscountCodes(data.discount_codes || [])
 
-      // Analytics
       trackAppOpen(data.restaurant.id)
 
-      // Carica cliente precedente via Edge
+      try {
+        const availRes = await fetch(
+          SUPABASE_URL + "/functions/v1/get-slot-availability",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + SUPABASE_ANON,
+            },
+            body: JSON.stringify({
+              restaurant_id: data.restaurant.id,
+              start_date: new Date().toISOString().slice(0, 10),
+              end_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
+            })
+          }
+        )
+        const availData = await availRes.json()
+        if (availData?.availability) {
+          setSlotAvailability(availData.availability)
+        }
+      } catch (err) {
+        console.log("Slot availability non disponibile:", err)
+      }
+
       loadPreviousCustomer(data.restaurant.id)
       
     } catch (err) {
@@ -471,9 +430,6 @@ function App() {
     }
   }
 
-  // ============================================
-  // 🚀 BULLDOZER: loadPreviousCustomer via Edge Function
-  // ============================================
   const loadPreviousCustomer = async (restaurantId) => {
     try {
       const savedPhone = localStorage.getItem("ordinlampo_phone_" + restaurantId)
@@ -500,18 +456,13 @@ function App() {
       setPreviousCustomer(data.customer || null)
       setPreviousOrder(data.last_order_data || null)
 
-      // Cache hash per le prossime volte
       if (data.phone_hash) {
         localStorage.setItem("ordinlampo_phonehash_" + restaurantId, data.phone_hash)
       }
     } catch {
-      // Best-effort: non rompere mai l'app
     }
   }
 
-  // ============================================
-  // NAVIGAZIONE
-  // ============================================
   const goToStep = (stepIndex) => {
     if (stepIndex >= 0 && stepIndex < activeSteps.length) {
       setCurrentStep(stepIndex)
@@ -522,9 +473,6 @@ function App() {
   const nextStep = () => goToStep(currentStep + 1)
   const prevStep = () => goToStep(currentStep - 1)
 
-  // ============================================
-  // CALCOLO PREZZI
-  // ============================================
   const calculateBowlPrice = useCallback((bowl) => {
     if (!bowl) return 0
     
@@ -647,9 +595,6 @@ function App() {
     return Math.max(0, total)
   }, [calculateSubtotal, orderType, selectedZone, wantsFloorDelivery, settings, appliedDiscount, tipAmount])
 
-  // ============================================
-  // GESTIONE BOWL
-  // ============================================
   const saveCurrentBowl = () => {
     const currentBowl = {
       bowlType: selectedBowlType,
@@ -709,9 +654,6 @@ function App() {
     setSelectedToppings([])
   }
 
-  // ============================================
-  // SELEZIONE INGREDIENTI
-  // ============================================
   const toggleIngredient = (ingredient, selection, setSelection, maxCount, allowDouble = false) => {
     const existingIndex = selection.findIndex(s => s.id === ingredient.id)
     
@@ -728,9 +670,6 @@ function App() {
     ))
   }
 
-  // ============================================
-  // 🚀 INVIO ORDINE - BULLDOZER (via Edge Function)
-  // ============================================
   const sendWhatsAppOrder = async () => {
     if (!restaurant?.id) return
 
@@ -788,16 +727,13 @@ function App() {
         return
       }
 
-      // Salva telefono e hash per ordini futuri
       localStorage.setItem("ordinlampo_phone_" + restaurant.id, customerData.phone)
       if (result.phone_hash) {
         localStorage.setItem("ordinlampo_phonehash_" + restaurant.id, result.phone_hash)
       }
 
-      // Track analytics (fire-and-forget)
       trackWhatsAppClick(restaurant.id, calculateTotal())
 
-      // Apri WhatsApp con URL dal server
       window.open(result.whatsapp_url, "_blank")
 
     } catch (err) {
@@ -806,9 +742,6 @@ function App() {
     }
   }
 
-  // ============================================
-  // RENDER
-  // ============================================
   if (loading) return <LoadingScreen />
   if (error) return <ErrorScreen message={error} />
   if (isClosed) return <ClosedScreen message={closedMessage} restaurant={restaurant} />
@@ -817,7 +750,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       {currentStep > 0 && (
         <header className="sticky top-0 z-40 bg-white shadow-sm">
           <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
@@ -837,7 +769,6 @@ function App() {
         </header>
       )}
 
-      {/* Main Content */}
       <main className={"max-w-lg mx-auto " + (currentStep > 0 ? "pb-32" : "")}>
         {CurrentStepComponent && (
           <CurrentStepComponent
@@ -848,7 +779,9 @@ function App() {
             categories={categories}
             ingredients={ingredients}
             openingHours={openingHours}
+            specialClosures={specialClosures}
             discountCodes={discountCodes}
+            slotAvailability={slotAvailability}
             
             orderType={orderType}
             setOrderType={setOrderType}
@@ -929,7 +862,6 @@ function App() {
         )}
       </main>
 
-      {/* Live Summary (Mobile) */}
       {currentStep >= activeSteps.findIndex(s => s.id === 'bowl-size') && 
        currentStep < activeSteps.findIndex(s => s.id === 'summary') && (
         <LiveSummary
@@ -955,7 +887,6 @@ function App() {
         />
       )}
 
-      {/* Unified Checkout Popup */}
       {showUnifiedCheckout && (
         <UnifiedCheckoutPopup
           customerData={customerData}
