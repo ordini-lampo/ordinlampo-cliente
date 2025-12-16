@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from './lib/supabase'
 import { trackAppOpen, trackCheckoutStart, trackWhatsAppClick } from './lib/analytics'
 
 // Componenti Step
@@ -50,7 +49,6 @@ function getSessionKeySafe() {
     localStorage.setItem("ol_session_key", fresh)
     return fresh
   } catch {
-    // Fallback se localStorage bloccato (privacy mode)
     return "fallback-" + Date.now() + "-" + Math.random().toString(16).slice(2)
   }
 }
@@ -420,86 +418,50 @@ function App() {
     }
   }, [])
 
+  // ============================================
+  // 🚀 BULLDOZER: loadRestaurantData via Edge Function
+  // ============================================
   const loadRestaurantData = async () => {
     try {
       setLoading(true)
       
       const urlParams = new URLSearchParams(window.location.search)
-      const slug = urlParams.get('r') || 'pokenjoy-sanremo'
+      const slug = (urlParams.get('r') || 'pokenjoy-sanremo').trim()
       
-      const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .single()
-      
-      if (restaurantError) throw new Error('Ristorante non trovato')
-      setRestaurant(restaurantData)
-      trackAppOpen(restaurantData.id)
-      
-      const { data: settingsData } = await supabase
-        .from('restaurant_settings')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .single()
-      setSettings(settingsData || {})
-      
-      const { data: locationsData } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .order('sort_order')
-      setLocations(locationsData || [])
-      
-      const { data: bowlTypesData } = await supabase
-        .from('bowl_types')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .order('sort_order')
-      setBowlTypes(bowlTypesData || [])
-      
-      const { data: categoriesData } = await supabase
-        .from('ingredient_categories')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .order('sort_order')
-      setCategories(categoriesData || [])
-      
-      const { data: ingredientsData } = await supabase
-        .from('ingredients')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-        .eq('is_available', true)
-        .order('sort_order')
-      setIngredients(ingredientsData || [])
-      
-      const { data: hoursData } = await supabase
-        .from('opening_hours')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .order('day_of_week')
-      setOpeningHours(hoursData || [])
-      
-      const { data: closuresData } = await supabase
-        .from('special_closures')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .gte('closure_date', new Date().toISOString().split('T')[0])
-      setSpecialClosures(closuresData || [])
-      
-      const { data: codesData } = await supabase
-        .from('discount_codes')
-        .select('*')
-        .eq('restaurant_id', restaurantData.id)
-        .eq('is_active', true)
-      setDiscountCodes(codesData || [])
-      
-      loadPreviousCustomer(restaurantData.id)
+      // 🚀 1 SOLA CHIAMATA invece di 8 query!
+      const res = await fetch(
+        SUPABASE_URL + "/functions/v1/get-restaurant-bundle?slug=" + encodeURIComponent(slug),
+        {
+          method: "GET",
+          headers: {
+            "Authorization": "Bearer " + SUPABASE_ANON,
+          },
+        }
+      )
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error("Bundle load failed:", data)
+        throw new Error(data?.error || "Errore caricamento ristorante")
+      }
+
+      // Set state (tutto in un colpo!)
+      setRestaurant(data.restaurant)
+      setSettings(data.settings || {})
+      setLocations(data.locations || [])
+      setBowlTypes(data.bowl_types || [])
+      setCategories(data.categories || [])
+      setIngredients(data.ingredients || [])
+      setOpeningHours(data.opening_hours || [])
+      setSpecialClosures(data.special_closures || [])
+      setDiscountCodes(data.discount_codes || [])
+
+      // Analytics
+      trackAppOpen(data.restaurant.id)
+
+      // Carica cliente precedente via Edge
+      loadPreviousCustomer(data.restaurant.id)
       
     } catch (err) {
       console.error('Errore caricamento:', err)
@@ -510,28 +472,40 @@ function App() {
   }
 
   // ============================================
-  // CLIENTE PRECEDENTE
+  // 🚀 BULLDOZER: loadPreviousCustomer via Edge Function
   // ============================================
   const loadPreviousCustomer = async (restaurantId) => {
     try {
       const savedPhone = localStorage.getItem("ordinlampo_phone_" + restaurantId)
-      if (!savedPhone) return
-      
-      const { data: prevCustomerData } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .eq('phone', savedPhone)
-        .single()
-      
-      if (prevCustomerData) {
-        setPreviousCustomer(prevCustomerData)
-        if (prevCustomerData.last_order_data) {
-          setPreviousOrder(prevCustomerData.last_order_data)
-        }
+      const savedPhoneHash = localStorage.getItem("ordinlampo_phonehash_" + restaurantId)
+      if (!savedPhone && !savedPhoneHash) return
+
+      const body = {
+        restaurant_id: restaurantId,
+        ...(savedPhoneHash ? { phone_hash: savedPhoneHash } : { phone: savedPhone }),
       }
-    } catch (err) {
-      console.log('Nessun cliente precedente trovato')
+
+      const res = await fetch(SUPABASE_URL + "/functions/v1/customer-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_ANON,
+        },
+        body: JSON.stringify(body),
+      })
+
+      const data = await res.json()
+      if (!res.ok) return
+
+      setPreviousCustomer(data.customer || null)
+      setPreviousOrder(data.last_order_data || null)
+
+      // Cache hash per le prossime volte
+      if (data.phone_hash) {
+        localStorage.setItem("ordinlampo_phonehash_" + restaurantId, data.phone_hash)
+      }
+    } catch {
+      // Best-effort: non rompere mai l'app
     }
   }
 
@@ -762,9 +736,7 @@ function App() {
 
     const payload = {
       restaurant_id: restaurant.id,
-      // 🛡️ PATCH 1: Session key SAFE
       session_key: getSessionKeySafe(),
-      // 🛡️ PATCH 2: Dedup key STABILE (anti doppio ordine)
       client_dedup_key: checkoutDedupKey || newDedupKey(),
       order_type: orderType,
       selected_slot: selectedSlot,
@@ -816,8 +788,11 @@ function App() {
         return
       }
 
-      // Salva telefono per ordini futuri
+      // Salva telefono e hash per ordini futuri
       localStorage.setItem("ordinlampo_phone_" + restaurant.id, customerData.phone)
+      if (result.phone_hash) {
+        localStorage.setItem("ordinlampo_phonehash_" + restaurant.id, result.phone_hash)
+      }
 
       // Track analytics (fire-and-forget)
       trackWhatsAppClick(restaurant.id, calculateTotal())
