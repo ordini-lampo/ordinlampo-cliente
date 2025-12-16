@@ -19,7 +19,8 @@ export default function TimeSlot({
     const dates = []
     const today = new Date()
     
-    for (let i = 0; i < 7; i++) {
+    // SOLO 2 GIORNI: OGGI + DOMANI
+    for (let i = 0; i < 2; i++) {
       const date = new Date(today)
       date.setDate(date.getDate() + i)
       
@@ -35,7 +36,9 @@ export default function TimeSlot({
           dateString: date.toLocaleDateString('it-IT'),
           dayName: date.toLocaleDateString('it-IT', { weekday: 'long' }),
           dayOfWeek: dayOfWeek,
-          hours: dayHours
+          hours: dayHours,
+          isToday: i === 0,
+          isTomorrow: i === 1
         })
       }
     }
@@ -54,12 +57,13 @@ export default function TimeSlot({
     const isToday = selectedDate.date.toDateString() === now.toDateString()
     const currentTime = now.getHours() * 60 + now.getMinutes()
 
+    // PRANZO: Confronta con ORA DI FINE
     if (selectedDate.hours.lunch_enabled) {
       const [lunchHour, lunchMin] = selectedDate.hours.lunch_open.split(':').map(Number)
-      const [lunchEndHour] = selectedDate.hours.lunch_close.split(':').map(Number)
-      const lunchStartTime = lunchHour * 60 + lunchMin
+      const [lunchEndHour, lunchEndMin] = selectedDate.hours.lunch_close.split(':').map(Number)
+      const lunchEndTime = lunchEndHour * 60 + lunchEndMin
       
-      if (!isToday || currentTime < lunchStartTime + 60) {
+      if (!isToday || currentTime < lunchEndTime) {
         slots.push({
           label: `Pranzo (${selectedDate.hours.lunch_open}-${selectedDate.hours.lunch_close})`,
           value: `${selectedDate.hours.lunch_open}-${selectedDate.hours.lunch_close}`,
@@ -69,11 +73,13 @@ export default function TimeSlot({
       }
     }
 
+    // CENA: Confronta con ORA DI FINE
     if (selectedDate.hours.dinner_enabled) {
       const [dinnerHour, dinnerMin] = selectedDate.hours.dinner_open.split(':').map(Number)
-      const dinnerStartTime = dinnerHour * 60 + dinnerMin
+      const [dinnerEndHour, dinnerEndMin] = selectedDate.hours.dinner_close.split(':').map(Number)
+      const dinnerEndTime = dinnerEndHour * 60 + dinnerEndMin
       
-      if (!isToday || currentTime < dinnerStartTime + 60) {
+      if (!isToday || currentTime < dinnerEndTime) {
         slots.push({
           label: `Cena (${selectedDate.hours.dinner_open}-${selectedDate.hours.dinner_close})`,
           value: `${selectedDate.hours.dinner_open}-${selectedDate.hours.dinner_close}`,
@@ -108,16 +114,7 @@ export default function TimeSlot({
   }
 
   if (showConfirmation) {
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    
-    const isToday = selectedDate.date.toDateString() === today.toDateString()
-    const isTomorrow = selectedDate.date.toDateString() === tomorrow.toDateString()
-    
-    let dayLabel = selectedDate.dayName
-    if (isToday) dayLabel = 'Oggi'
-    if (isTomorrow) dayLabel = 'Domani'
+    const dayLabel = selectedDate.isToday ? 'Oggi' : selectedDate.isTomorrow ? 'Domani' : selectedDate.dayName
     
     const fullDate = selectedDate.date.toLocaleDateString('it-IT', { 
       weekday: 'long',
@@ -195,24 +192,25 @@ export default function TimeSlot({
       <h2 className="text-2xl font-bold mb-2">Quando vuoi ricevere l'ordine?</h2>
       <p className="text-gray-600 mb-6">Scegli il giorno e la fascia oraria</p>
       
+      {/* BOTTONI GRANDI OGGI/DOMANI */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3">1. Scegli il giorno</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {availableDates.map((dateObj, idx) => (
+        <div className="grid grid-cols-2 gap-4">
+          {availableDates.map((dateObj) => (
             <button
-              key={idx}
+              key={dateObj.dateString}
               onClick={() => {
                 setSelectedDate(dateObj)
                 setSelectedTime(null)
               }}
-              className={`p-4 rounded-lg border-2 transition ${
+              className={`p-6 rounded-xl border-2 transition-all ${
                 selectedDate?.dateString === dateObj.dateString
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-orange-200'
+                  ? 'border-orange-500 bg-orange-50 shadow-lg'
+                  : 'border-gray-200 hover:border-orange-300 hover:shadow-md'
               }`}
             >
-              <div className="font-bold">
-                {idx === 0 ? 'Oggi' : idx === 1 ? 'Domani' : dateObj.dayName}
+              <div className="text-2xl font-bold mb-1">
+                {dateObj.isToday ? '🌅 Oggi' : '🌄 Domani'}
               </div>
               <div className="text-sm text-gray-600">{dateObj.dateString}</div>
             </button>
@@ -220,13 +218,14 @@ export default function TimeSlot({
         </div>
       </div>
       
+      {/* FASCE ORARIE */}
       {selectedDate && timeSlots.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-3">2. Scegli la fascia oraria</h3>
           <div className="grid grid-cols-1 gap-3">
-            {timeSlots.map((slot, idx) => (
+            {timeSlots.map((slot) => (
               <button
-                key={idx}
+                key={slot.value}
                 onClick={() => setSelectedTime(slot)}
                 className={`p-4 rounded-lg border-2 transition ${
                   selectedTime?.value === slot.value
@@ -241,6 +240,7 @@ export default function TimeSlot({
         </div>
       )}
 
+      {/* MESSAGGIO NESSUN ORARIO */}
       {selectedDate && timeSlots.length === 0 && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-yellow-800">
@@ -250,6 +250,7 @@ export default function TimeSlot({
         </div>
       )}
       
+      {/* PULSANTE CONTINUA */}
       <button
         onClick={handleContinue}
         disabled={!selectedDate || !selectedTime}
