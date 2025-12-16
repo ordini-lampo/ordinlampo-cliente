@@ -30,6 +30,38 @@ import LoadingScreen from './components/LoadingScreen'
 import ErrorScreen from './components/ErrorScreen'
 import ClosedScreen from './components/ClosedScreen'
 
+// ============================================
+// 🔧 CONFIG - Edge Function URL
+// ============================================
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// ============================================
+// 🛡️ PATCH 1: Session Key BULLDOZER (mai "unknown")
+// ============================================
+function getSessionKeySafe() {
+  try {
+    const k = localStorage.getItem("ol_session_key")
+    if (k && k.length > 20) return k
+    const fresh =
+      (crypto?.randomUUID?.() ?? String(Date.now())) +
+      "-" +
+      Math.random().toString(16).slice(2)
+    localStorage.setItem("ol_session_key", fresh)
+    return fresh
+  } catch {
+    // Fallback se localStorage bloccato (privacy mode)
+    return "fallback-" + Date.now() + "-" + Math.random().toString(16).slice(2)
+  }
+}
+
+// ============================================
+// 🛡️ PATCH 2: Dedup Key Generator
+// ============================================
+function newDedupKey() {
+  return "chk_" + Date.now() + "_" + Math.random().toString(16).slice(2)
+}
+
 function App() {
   // ============================================
   // STATE - Dati Ristorante
@@ -59,9 +91,14 @@ function App() {
   const [showUnifiedCheckout, setShowUnifiedCheckout] = useState(false)
   
   // ============================================
+  // 🛡️ PATCH 2: Dedup Key State (anti doppio ordine)
+  // ============================================
+  const [checkoutDedupKey, setCheckoutDedupKey] = useState(null)
+  
+  // ============================================
   // STATE - Ordine
   // ============================================
-  const [orderType, setOrderType] = useState(null) // 'delivery' | 'pickup'
+  const [orderType, setOrderType] = useState(null)
   const [selectedZone, setSelectedZone] = useState(null)
   
   // Multi-bowl support
@@ -151,7 +188,39 @@ function App() {
   const activeSteps = steps.filter(step => !step.condition || step.condition())
 
   // ============================================
+  // 🛡️ PATCH 4: Fail-fast se mancano env
+  // ============================================
+  useEffect(() => {
+    if (!SUPABASE_URL || !SUPABASE_ANON) {
+      setError("Configurazione mancante. Contatta il supporto.")
+      console.error("MISSING ENV: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY")
+    }
+  }, [])
+
+  // ============================================
+  // 🛡️ PATCH 3: Clamp step (anti schermo vuoto)
+  // ============================================
+  useEffect(() => {
+    if (currentStep < 0 || currentStep >= activeSteps.length) {
+      setCurrentStep(0)
+    }
+  }, [activeSteps.length, currentStep])
+
+  // ============================================
+  // 🛡️ PATCH 2: Dedup key stabile per checkout
+  // ============================================
+  useEffect(() => {
+    if (showUnifiedCheckout && !checkoutDedupKey) {
+      setCheckoutDedupKey(newDedupKey())
+    }
+    if (!showUnifiedCheckout) {
+      setCheckoutDedupKey(null)
+    }
+  }, [showUnifiedCheckout, checkoutDedupKey])
+
+  // ============================================
   // CARICAMENTO DATI INIZIALE
+  // ============================================
   useEffect(() => {
     loadRestaurantData()
   }, [])
@@ -164,99 +233,99 @@ function App() {
   }, [bowls])
 
   // 🛡️ LOCAL STORAGE COMPLETO - Salva TUTTO in tempo reale
-useEffect(() => {
-  if (selectedProteins.length > 0) {
-    localStorage.setItem("ordinlampo_proteins", JSON.stringify(selectedProteins))
-  }
-}, [selectedProteins])
+  useEffect(() => {
+    if (selectedProteins.length > 0) {
+      localStorage.setItem("ordinlampo_proteins", JSON.stringify(selectedProteins))
+    }
+  }, [selectedProteins])
 
-useEffect(() => {
-  if (selectedIngredients.length > 0) {
-    localStorage.setItem("ordinlampo_ingredients", JSON.stringify(selectedIngredients))
-  }
-}, [selectedIngredients])
+  useEffect(() => {
+    if (selectedIngredients.length > 0) {
+      localStorage.setItem("ordinlampo_ingredients", JSON.stringify(selectedIngredients))
+    }
+  }, [selectedIngredients])
 
-useEffect(() => {
-  if (selectedSauces.length > 0) {
-    localStorage.setItem("ordinlampo_sauces", JSON.stringify(selectedSauces))
-  }
-}, [selectedSauces])
+  useEffect(() => {
+    if (selectedSauces.length > 0) {
+      localStorage.setItem("ordinlampo_sauces", JSON.stringify(selectedSauces))
+    }
+  }, [selectedSauces])
 
-useEffect(() => {
-  if (selectedToppings.length > 0) {
-    localStorage.setItem("ordinlampo_toppings", JSON.stringify(selectedToppings))
-  }
-}, [selectedToppings])
+  useEffect(() => {
+    if (selectedToppings.length > 0) {
+      localStorage.setItem("ordinlampo_toppings", JSON.stringify(selectedToppings))
+    }
+  }, [selectedToppings])
 
-useEffect(() => {
-  if (selectedBowlType) {
-    localStorage.setItem("ordinlampo_bowltype", JSON.stringify(selectedBowlType))
-  }
-}, [selectedBowlType])
+  useEffect(() => {
+    if (selectedBowlType) {
+      localStorage.setItem("ordinlampo_bowltype", JSON.stringify(selectedBowlType))
+    }
+  }, [selectedBowlType])
 
-useEffect(() => {
-  if (selectedBases.length > 0) {
-    localStorage.setItem("ordinlampo_bases", JSON.stringify(selectedBases))
-  }
-}, [selectedBases])
+  useEffect(() => {
+    if (selectedBases.length > 0) {
+      localStorage.setItem("ordinlampo_bases", JSON.stringify(selectedBases))
+    }
+  }, [selectedBases])
 
-useEffect(() => {
-  localStorage.setItem("ordinlampo_halfhalf", JSON.stringify(isHalfHalf))
-}, [isHalfHalf])
+  useEffect(() => {
+    localStorage.setItem("ordinlampo_halfhalf", JSON.stringify(isHalfHalf))
+  }, [isHalfHalf])
 
-useEffect(() => {
-  if (selectedAllergies.length > 0) {
-    localStorage.setItem("ordinlampo_allergies", JSON.stringify(selectedAllergies))
-  }
-}, [selectedAllergies])
+  useEffect(() => {
+    if (selectedAllergies.length > 0) {
+      localStorage.setItem("ordinlampo_allergies", JSON.stringify(selectedAllergies))
+    }
+  }, [selectedAllergies])
 
-useEffect(() => {
-  if (specificIngredient1) {
-    localStorage.setItem("ordinlampo_specific1", specificIngredient1)
-  }
-}, [specificIngredient1])
+  useEffect(() => {
+    if (specificIngredient1) {
+      localStorage.setItem("ordinlampo_specific1", specificIngredient1)
+    }
+  }, [specificIngredient1])
 
-useEffect(() => {
-  if (specificIngredient2) {
-    localStorage.setItem("ordinlampo_specific2", specificIngredient2)
-  }
-}, [specificIngredient2])
+  useEffect(() => {
+    if (specificIngredient2) {
+      localStorage.setItem("ordinlampo_specific2", specificIngredient2)
+    }
+  }, [specificIngredient2])
 
-useEffect(() => {
-  if (orderType) {
-    localStorage.setItem("ordinlampo_ordertype", orderType)
-  }
-}, [orderType])
+  useEffect(() => {
+    if (orderType) {
+      localStorage.setItem("ordinlampo_ordertype", orderType)
+    }
+  }, [orderType])
 
-useEffect(() => {
-  if (selectedZone) {
-    localStorage.setItem("ordinlampo_zone", JSON.stringify(selectedZone))
-  }
-}, [selectedZone])
+  useEffect(() => {
+    if (selectedZone) {
+      localStorage.setItem("ordinlampo_zone", JSON.stringify(selectedZone))
+    }
+  }, [selectedZone])
 
-useEffect(() => {
-  if (currentStep > 0) {
-    localStorage.setItem("ordinlampo_step", currentStep.toString())
-  }
-}, [currentStep])
+  useEffect(() => {
+    if (currentStep > 0) {
+      localStorage.setItem("ordinlampo_step", currentStep.toString())
+    }
+  }, [currentStep])
 
-useEffect(() => {
-  if (backupOption) {
-    localStorage.setItem("ordinlampo_backup", backupOption)
-  }
-}, [backupOption])
+  useEffect(() => {
+    if (backupOption) {
+      localStorage.setItem("ordinlampo_backup", backupOption)
+    }
+  }, [backupOption])
 
-useEffect(() => {
-  if (selectedSlot) {
-    localStorage.setItem("ordinlampo_slot", JSON.stringify(selectedSlot))
-  }
-}, [selectedSlot])
+  useEffect(() => {
+    if (selectedSlot) {
+      localStorage.setItem("ordinlampo_slot", JSON.stringify(selectedSlot))
+    }
+  }, [selectedSlot])
 
-useEffect(() => {
-  if (paymentMethod) {
-    localStorage.setItem("ordinlampo_payment", paymentMethod)
-  }
-}, [paymentMethod])
+  useEffect(() => {
+    if (paymentMethod) {
+      localStorage.setItem("ordinlampo_payment", paymentMethod)
+    }
+  }, [paymentMethod])
 
   useEffect(() => {
     if (Object.keys(selectedBeverages).length > 0) {
@@ -271,95 +340,93 @@ useEffect(() => {
   }, [customerData])
 
   // 🛡️ LOCAL STORAGE LOADER - Ripristina tutto al caricamento
-useEffect(() => {
-  const savedBowls = localStorage.getItem("ordinlampo_bowls")
-  const savedBeverages = localStorage.getItem("ordinlampo_beverages")
-  const savedCustomer = localStorage.getItem("ordinlampo_customer")
-  const savedProteins = localStorage.getItem("ordinlampo_proteins")
-  const savedIngredients = localStorage.getItem("ordinlampo_ingredients")
-  const savedSauces = localStorage.getItem("ordinlampo_sauces")
-  const savedToppings = localStorage.getItem("ordinlampo_toppings")
-  const savedBowlType = localStorage.getItem("ordinlampo_bowltype")
-  const savedBases = localStorage.getItem("ordinlampo_bases")
-  const savedHalfHalf = localStorage.getItem("ordinlampo_halfhalf")
-  const savedAllergies = localStorage.getItem("ordinlampo_allergies")
-  const savedSpecific1 = localStorage.getItem("ordinlampo_specific1")
-  const savedSpecific2 = localStorage.getItem("ordinlampo_specific2")
-  const savedOrderType = localStorage.getItem("ordinlampo_ordertype")
-  const savedZone = localStorage.getItem("ordinlampo_zone")
-  const savedStep = localStorage.getItem("ordinlampo_step")
-  const savedBackup = localStorage.getItem("ordinlampo_backup")
-  const savedSlot = localStorage.getItem("ordinlampo_slot")
-  const savedPayment = localStorage.getItem("ordinlampo_payment")
-  
-  if (savedBowls) {
-    try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
-  }
-  if (savedBeverages) {
-    try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
-  }
-  if (savedCustomer) {
-    try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
-  }
-  if (savedProteins) {
-    try { setSelectedProteins(JSON.parse(savedProteins)) } catch(e) {}
-  }
-  if (savedIngredients) {
-    try { setSelectedIngredients(JSON.parse(savedIngredients)) } catch(e) {}
-  }
-  if (savedSauces) {
-    try { setSelectedSauces(JSON.parse(savedSauces)) } catch(e) {}
-  }
-  if (savedToppings) {
-    try { setSelectedToppings(JSON.parse(savedToppings)) } catch(e) {}
-  }
-  if (savedBowlType) {
-    try { setSelectedBowlType(JSON.parse(savedBowlType)) } catch(e) {}
-  }
-  if (savedBases) {
-    try { setSelectedBases(JSON.parse(savedBases)) } catch(e) {}
-  }
-  if (savedHalfHalf) {
-    try { setIsHalfHalf(JSON.parse(savedHalfHalf)) } catch(e) {}
-  }
-  if (savedAllergies) {
-    try { setSelectedAllergies(JSON.parse(savedAllergies)) } catch(e) {}
-  }
-  if (savedSpecific1) {
-  setSpecificIngredient1(savedSpecific1)
-  }
-  if (savedSpecific2) {
-  setSpecificIngredient2(savedSpecific2)
-  }
-  if (savedOrderType) {
-    setOrderType(savedOrderType)
-  }
-  if (savedZone) {
-    try { setSelectedZone(JSON.parse(savedZone)) } catch(e) {}
-  }
-  if (savedStep) {
-    try { setCurrentStep(parseInt(savedStep)) } catch(e) {}
-  }
-  if (savedBackup) {
-    setBackupOption(savedBackup)
-  }
-  if (savedSlot) {
-    try { setSelectedSlot(JSON.parse(savedSlot)) } catch(e) {}
-  }
-  if (savedPayment) {
-    setPaymentMethod(savedPayment)
-  }
-}, [])
+  useEffect(() => {
+    const savedBowls = localStorage.getItem("ordinlampo_bowls")
+    const savedBeverages = localStorage.getItem("ordinlampo_beverages")
+    const savedCustomer = localStorage.getItem("ordinlampo_customer")
+    const savedProteins = localStorage.getItem("ordinlampo_proteins")
+    const savedIngredients = localStorage.getItem("ordinlampo_ingredients")
+    const savedSauces = localStorage.getItem("ordinlampo_sauces")
+    const savedToppings = localStorage.getItem("ordinlampo_toppings")
+    const savedBowlType = localStorage.getItem("ordinlampo_bowltype")
+    const savedBases = localStorage.getItem("ordinlampo_bases")
+    const savedHalfHalf = localStorage.getItem("ordinlampo_halfhalf")
+    const savedAllergies = localStorage.getItem("ordinlampo_allergies")
+    const savedSpecific1 = localStorage.getItem("ordinlampo_specific1")
+    const savedSpecific2 = localStorage.getItem("ordinlampo_specific2")
+    const savedOrderType = localStorage.getItem("ordinlampo_ordertype")
+    const savedZone = localStorage.getItem("ordinlampo_zone")
+    const savedStep = localStorage.getItem("ordinlampo_step")
+    const savedBackup = localStorage.getItem("ordinlampo_backup")
+    const savedSlot = localStorage.getItem("ordinlampo_slot")
+    const savedPayment = localStorage.getItem("ordinlampo_payment")
+    
+    if (savedBowls) {
+      try { setBowls(JSON.parse(savedBowls)) } catch(e) {}
+    }
+    if (savedBeverages) {
+      try { setSelectedBeverages(JSON.parse(savedBeverages)) } catch(e) {}
+    }
+    if (savedCustomer) {
+      try { setCustomerData(prev => ({...prev, ...JSON.parse(savedCustomer)})) } catch(e) {}
+    }
+    if (savedProteins) {
+      try { setSelectedProteins(JSON.parse(savedProteins)) } catch(e) {}
+    }
+    if (savedIngredients) {
+      try { setSelectedIngredients(JSON.parse(savedIngredients)) } catch(e) {}
+    }
+    if (savedSauces) {
+      try { setSelectedSauces(JSON.parse(savedSauces)) } catch(e) {}
+    }
+    if (savedToppings) {
+      try { setSelectedToppings(JSON.parse(savedToppings)) } catch(e) {}
+    }
+    if (savedBowlType) {
+      try { setSelectedBowlType(JSON.parse(savedBowlType)) } catch(e) {}
+    }
+    if (savedBases) {
+      try { setSelectedBases(JSON.parse(savedBases)) } catch(e) {}
+    }
+    if (savedHalfHalf) {
+      try { setIsHalfHalf(JSON.parse(savedHalfHalf)) } catch(e) {}
+    }
+    if (savedAllergies) {
+      try { setSelectedAllergies(JSON.parse(savedAllergies)) } catch(e) {}
+    }
+    if (savedSpecific1) {
+      setSpecificIngredient1(savedSpecific1)
+    }
+    if (savedSpecific2) {
+      setSpecificIngredient2(savedSpecific2)
+    }
+    if (savedOrderType) {
+      setOrderType(savedOrderType)
+    }
+    if (savedZone) {
+      try { setSelectedZone(JSON.parse(savedZone)) } catch(e) {}
+    }
+    if (savedStep) {
+      try { setCurrentStep(parseInt(savedStep)) } catch(e) {}
+    }
+    if (savedBackup) {
+      setBackupOption(savedBackup)
+    }
+    if (savedSlot) {
+      try { setSelectedSlot(JSON.parse(savedSlot)) } catch(e) {}
+    }
+    if (savedPayment) {
+      setPaymentMethod(savedPayment)
+    }
+  }, [])
 
   const loadRestaurantData = async () => {
     try {
       setLoading(true)
       
-      // Ottieni slug da URL o usa default
       const urlParams = new URLSearchParams(window.location.search)
       const slug = urlParams.get('r') || 'pokenjoy-sanremo'
       
-      // Carica ristorante
       const { data: restaurantData, error: restaurantError } = await supabase
         .from('restaurants')
         .select('*')
@@ -371,7 +438,6 @@ useEffect(() => {
       setRestaurant(restaurantData)
       trackAppOpen(restaurantData.id)
       
-      // Carica settings
       const { data: settingsData } = await supabase
         .from('restaurant_settings')
         .select('*')
@@ -379,7 +445,6 @@ useEffect(() => {
         .single()
       setSettings(settingsData || {})
       
-      // Carica locations
       const { data: locationsData } = await supabase
         .from('locations')
         .select('*')
@@ -388,7 +453,6 @@ useEffect(() => {
         .order('sort_order')
       setLocations(locationsData || [])
       
-      // Carica tipi bowl
       const { data: bowlTypesData } = await supabase
         .from('bowl_types')
         .select('*')
@@ -397,7 +461,6 @@ useEffect(() => {
         .order('sort_order')
       setBowlTypes(bowlTypesData || [])
       
-      // Carica categorie ingredienti
       const { data: categoriesData } = await supabase
         .from('ingredient_categories')
         .select('*')
@@ -406,7 +469,6 @@ useEffect(() => {
         .order('sort_order')
       setCategories(categoriesData || [])
       
-      // Carica ingredienti
       const { data: ingredientsData } = await supabase
         .from('ingredients')
         .select('*')
@@ -416,7 +478,6 @@ useEffect(() => {
         .order('sort_order')
       setIngredients(ingredientsData || [])
       
-      // Carica orari apertura
       const { data: hoursData } = await supabase
         .from('opening_hours')
         .select('*')
@@ -424,7 +485,6 @@ useEffect(() => {
         .order('day_of_week')
       setOpeningHours(hoursData || [])
       
-      // Carica chiusure speciali
       const { data: closuresData } = await supabase
         .from('special_closures')
         .select('*')
@@ -432,7 +492,6 @@ useEffect(() => {
         .gte('closure_date', new Date().toISOString().split('T')[0])
       setSpecialClosures(closuresData || [])
       
-      // Carica codici sconto attivi
       const { data: codesData } = await supabase
         .from('discount_codes')
         .select('*')
@@ -440,25 +499,6 @@ useEffect(() => {
         .eq('is_active', true)
       setDiscountCodes(codesData || [])
       
-      // ► CONTROLLI ORARI DISABILITATI
-      // L'app è sempre accessibile - il cliente sceglie la fascia oraria desiderata
-      
-      // COMMENTATO: Verifica se ristorante accetta ordini
-      // if (!restaurantData.accept_orders) {
-      //   setIsClosed(true)
-      //   setClosedMessage('Il ristorante non accetta ordini al momento.')
-      //   return
-      // }
-      
-      // COMMENTATO: Verifica orari apertura
-      // const closureCheck = checkIfClosed(hoursData, closuresData)
-      // if (closureCheck.closed) {
-      //   setIsClosed(true)
-      //   setClosedMessage(closureCheck.message)
-      //   return
-      // }
-      
-      // Carica cliente precedente (se presente in localStorage)
       loadPreviousCustomer(restaurantData.id)
       
     } catch (err) {
@@ -470,80 +510,24 @@ useEffect(() => {
   }
 
   // ============================================
-  // VERIFICA ORARI APERTURA
-  // ============================================
-  const checkIfClosed = (hours, closures) => {
-    const now = new Date()
-    const today = now.toISOString().split('T')[0]
-    const dayOfWeek = now.getDay()
-    const currentTime = now.toTimeString().slice(0, 5)
-    
-    // Verifica chiusure speciali
-    const specialClosure = closures?.find(c => c.closure_date === today)
-    if (specialClosure) {
-      return { 
-        closed: true, 
-        message: specialClosure.reason || 'Oggi siamo chiusi per chiusura speciale.' 
-      }
-    }
-    
-    // Verifica orario giornaliero
-    const todayHours = hours?.find(h => h.day_of_week === dayOfWeek)
-    if (!todayHours || todayHours.is_closed) {
-      return { 
-        closed: true, 
-        message: 'Oggi siamo chiusi. Riapriamo domani!' 
-      }
-    }
-    
-    // Verifica se siamo in orario
-    const inLunch = todayHours.lunch_enabled && 
-                    currentTime >= todayHours.lunch_open && 
-                    currentTime <= todayHours.lunch_close
-    
-    const inDinner = todayHours.dinner_enabled && 
-                     currentTime >= todayHours.dinner_open && 
-                     currentTime <= todayHours.dinner_close
-    
-    if (!inLunch && !inDinner) {
-      // Determina prossima apertura
-      let nextOpen = ''
-      if (currentTime < todayHours.lunch_open && todayHours.lunch_enabled) {
-        nextOpen = `alle ${todayHours.lunch_open}`
-      } else if (currentTime < todayHours.dinner_open && todayHours.dinner_enabled) {
-        nextOpen = `alle ${todayHours.dinner_open}`
-      } else {
-        nextOpen = 'domani'
-      }
-      
-      return { 
-        closed: true, 
-        message: `Siamo chiusi! Riapriamo ${nextOpen}` 
-      }
-    }
-    
-    return { closed: false }
-  }
-
-  // ============================================
   // CLIENTE PRECEDENTE
   // ============================================
   const loadPreviousCustomer = async (restaurantId) => {
     try {
-      const savedPhone = localStorage.getItem(`ordinlampo_phone_${restaurantId}`)
+      const savedPhone = localStorage.getItem("ordinlampo_phone_" + restaurantId)
       if (!savedPhone) return
       
-      const { data: customerData } = await supabase
+      const { data: prevCustomerData } = await supabase
         .from('customers')
         .select('*')
         .eq('restaurant_id', restaurantId)
         .eq('phone', savedPhone)
         .single()
       
-      if (customerData) {
-        setPreviousCustomer(customerData)
-        if (customerData.last_order_data) {
-          setPreviousOrder(customerData.last_order_data)
+      if (prevCustomerData) {
+        setPreviousCustomer(prevCustomerData)
+        if (prevCustomerData.last_order_data) {
+          setPreviousOrder(prevCustomerData.last_order_data)
         }
       }
     } catch (err) {
@@ -572,47 +556,40 @@ useEffect(() => {
     
     let price = bowl.bowlType?.price || 0
     
-    // ✅ PORZIONI EXTRA PROTEINE (€2.50 cad.)
     const PROTEIN_EXTRA_PRICE = 2.50
     bowl.proteins?.forEach(p => {
       if (p.extraPortions && p.extraPortions > 0) {
         price += p.extraPortions * PROTEIN_EXTRA_PRICE
       }
-      // Vecchio sistema isDouble (compatibilità)
       if (p.isDouble) {
         const proteinCategory = categories.find(c => c.name === 'proteine')
         price += proteinCategory?.double_portion_price || 0
       }
     })
     
-    // Extra proteine oltre il max
     const proteinCategory = categories.find(c => c.name === 'proteine')
     if (proteinCategory) {
       const extraProteins = (bowl.proteins?.length || 0) - proteinCategory.max_selections
       if (extraProteins > 0) price += extraProteins * (proteinCategory.extra_price || 0)
     }
     
-    // ✅ PORZIONI EXTRA INGREDIENTI (€1.50 cad.)
     const INGREDIENT_EXTRA_PRICE = 1.50
     bowl.ingredients?.forEach(i => {
       if (i.extraPortions && i.extraPortions > 0) {
         price += i.extraPortions * INGREDIENT_EXTRA_PRICE
       }
-      // Vecchio sistema isDouble (compatibilità)
       if (i.isDouble) {
         const ingredientsCategory = categories.find(c => c.name === 'ingredienti')
         price += ingredientsCategory?.double_portion_price || 0
       }
     })
     
-    // Extra ingredienti oltre il max
     const ingredientsCategory = categories.find(c => c.name === 'ingredienti')
     if (ingredientsCategory) {
       const extraIngredients = (bowl.ingredients?.length || 0) - ingredientsCategory.max_selections
       if (extraIngredients > 0) price += extraIngredients * (ingredientsCategory.extra_price || 0)
     }
     
-    // ✅ PORZIONI EXTRA SALSE (€0.80 cad.)
     const SAUCE_EXTRA_PRICE = 0.80
     bowl.sauces?.forEach(s => {
       if (s.extraPortions && s.extraPortions > 0) {
@@ -620,27 +597,23 @@ useEffect(() => {
       }
     })
     
-    // Extra salse oltre il max
     const sauceCategory = categories.find(c => c.name === 'salse')
     if (sauceCategory) {
       const extraSauces = (bowl.sauces?.length || 0) - sauceCategory.max_selections
       if (extraSauces > 0) price += extraSauces * (sauceCategory.extra_price || 0)
     }
     
-    // ✅ PORZIONI EXTRA TOPPING (€2.00 cad.)
     const TOPPING_EXTRA_PRICE = 2.00
     bowl.toppings?.forEach(t => {
       if (t.extraPortions && t.extraPortions > 0) {
         price += t.extraPortions * TOPPING_EXTRA_PRICE
       }
-      // Vecchio sistema isDouble (compatibilità)
       if (t.isDouble) {
         const toppingCategory = categories.find(c => c.name === 'topping')
         price += toppingCategory?.double_portion_price || 0
       }
     })
     
-    // Extra topping oltre il max
     const toppingCategory = categories.find(c => c.name === 'topping')
     if (toppingCategory) {
       const extraToppings = (bowl.toppings?.length || 0) - toppingCategory.max_selections
@@ -662,7 +635,6 @@ useEffect(() => {
   }, [selectedBeverages, ingredients])
 
   const calculateSubtotal = useCallback(() => {
-    // Prezzo bowl corrente (se non ancora salvata)
     const currentBowlPrice = currentBowlIndex >= bowls.length ? calculateBowlPrice({
       bowlType: selectedBowlType,
       proteins: selectedProteins,
@@ -671,10 +643,7 @@ useEffect(() => {
       toppings: selectedToppings
     }) : 0
     
-    // Prezzo bowls salvate
     const savedBowlsPrice = bowls.reduce((sum, bowl) => sum + calculateBowlPrice(bowl), 0)
-    
-    // Prezzo bevande
     const beveragesPrice = calculateBeveragesPrice()
     
     return currentBowlPrice + savedBowlsPrice + beveragesPrice
@@ -683,17 +652,14 @@ useEffect(() => {
   const calculateTotal = useCallback(() => {
     let total = calculateSubtotal()
     
-    // Consegna
     if (orderType === 'delivery' && selectedZone) {
       total += parseFloat(selectedZone.delivery_fee) || 0
     }
     
-    // Consegna al piano
     if (wantsFloorDelivery && settings?.floor_delivery_price) {
       total += parseFloat(settings.floor_delivery_price) || 0
     }
     
-    // Sconto
     if (appliedDiscount) {
       if (appliedDiscount.discount_type === 'percentage') {
         total -= total * (appliedDiscount.discount_value / 100)
@@ -702,7 +668,6 @@ useEffect(() => {
       }
     }
     
-    // Mancia (aggiunta dopo per non influenzare sconto)
     total += tipAmount
     
     return Math.max(0, total)
@@ -777,10 +742,8 @@ useEffect(() => {
     const existingIndex = selection.findIndex(s => s.id === ingredient.id)
     
     if (existingIndex >= 0) {
-      // Già selezionato - rimuovi
       setSelection(selection.filter(s => s.id !== ingredient.id))
     } else if (selection.length < maxCount || maxCount === 99) {
-      // Aggiungi se sotto il limite
       setSelection([...selection, { ...ingredient, isDouble: false }])
     }
   }
@@ -792,280 +755,80 @@ useEffect(() => {
   }
 
   // ============================================
-  // INVIO ORDINE
+  // 🚀 INVIO ORDINE - BULLDOZER (via Edge Function)
   // ============================================
-const generateWhatsAppMessage = () => {
-    const now = new Date()
-    const dateStr = now.toLocaleDateString('it-IT')
-    const orderNumber = String(Math.floor(Math.random() * 9999)).padStart(4, '0')
-    
-    // Tutte le bowl
-    const allBowls = [...bowls]
-    if (currentBowlIndex >= bowls.length && selectedBowlType) {
-      allBowls.push({
-        bowlType: selectedBowlType,
-        bases: selectedBases,
-        isHalfHalf,
-        proteins: selectedProteins,
-        ingredients: selectedIngredients,
-        sauces: selectedSauces,
-        toppings: selectedToppings
-      })
-    }
-    
-    let msg = `══════════════════\n`
-    msg += `SEZIONE 1: DATI ORDINE\n`
-    msg += `══════════════════\n\n`
-    
-msg += `➤ N. Ordine: #${orderNumber}\n\n`
-    
-    const orderDate = dateStr
-    const orderTime = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
-    
-    msg += `➤ Data Ordine: ${orderDate} ore ${orderTime}\n\n`
-    
-    if (selectedSlot && typeof selectedSlot === 'object') {
-      msg += `➤ Data Consegna: ${selectedSlot.dateString}\n\n`
-      msg += `➤ Ora Consegna Richiesta: ${selectedSlot.timeLabel}\n\n`
-    } else {
-      msg += `➤ Ora Richiesta: ${selectedSlot}\n\n`
-    }
-    
-    // Sezione Ingredienti
-    msg += `══════════════════\n`
-    msg += `SEZIONE 2: INGREDIENTI\n`
-    msg += `══════════════════\n\n`
-    
-    // Bowl
-    allBowls.forEach((bowl, idx) => {
-      msg += `► BOWL #${idx + 1} (${bowl.bowlType.name})\n`
-      msg += `━━━━━━━━━━━━━━━━━━\n\n`
-      
-      // Base
-      if (bowl.bases && bowl.bases.length > 0) {
-        msg += `◆ Base [N. ${bowl.bases.length}]:\n`
-        bowl.bases.forEach(b => {
-          msg += `   → ${b.name}${bowl.isHalfHalf && bowl.bases.length > 1 ? ' (50/50)' : ''}\n\n`
-        })
-      }
-      
-      // Proteine
-      if (bowl.proteins && bowl.proteins.length > 0) {
-        msg += `◆ Proteine [N. ${bowl.proteins.length}]:\n`
-        bowl.proteins.forEach(p => {
-          msg += `   → ${p.name}`
-          if (p.isDouble) {
-            msg += ` ✨ EXTRA x2`
-          }
-          msg += `\n\n`
-        })
-      }
-      
-      // Ingredienti
-      if (bowl.ingredients && bowl.ingredients.length > 0) {
-        msg += `◆ Verdure [N. ${bowl.ingredients.length}]:\n`
-        bowl.ingredients.forEach(i => {
-          msg += `   → ${i.name}`
-          if (i.isDouble) {
-            msg += ` ✨ EXTRA x2`
-          }
-          msg += `\n\n`
-        })
-      }
-      
-      // Salse
-      if (bowl.sauces && bowl.sauces.length > 0) {
-        msg += `◆ Salse [N. ${bowl.sauces.length}]:\n`
-        bowl.sauces.forEach(s => {
-          msg += `   → ${s.name}\n\n`
-        })
-      }
-      
-      // Topping
-      if (bowl.toppings && bowl.toppings.length > 0) {
-        msg += `◆ Toppings [N. ${bowl.toppings.length}]:\n`
-        bowl.toppings.forEach(t => {
-          msg += `   → ${t.name}`
-          if (t.isDouble) {
-            msg += ` ✨ EXTRA x2`
-          }
-          msg += `\n\n`
-        })
-      }
-      
-      msg += `\n`
-    })
-    
-    // Bevande
-    const beveragesList = Object.entries(selectedBeverages).filter(([_, qty]) => qty > 0)
-    if (beveragesList.length > 0) {
-      const totalBeverages = beveragesList.reduce((sum, [_, qty]) => sum + qty, 0)
-      msg += `◆ Bevande [N. ${totalBeverages}]:\n`
-      beveragesList.forEach(([id, qty]) => {
-        const bev = ingredients.find(i => i.id === parseInt(id))
-        if (bev) {
-          msg += `   → ${bev.name} ×${qty} - €${(bev.price * qty).toFixed(2)}\n\n`
-        }
-      })
-      msg += `\n`
-    }
-    
-    // Riserva
-    if (settings?.enable_backup_ingredient && backupOption) {
-      msg += `► RISERVA: `
-      if (backupOption === 'chef_choice') {
-        msg += `Sostituire a discrezione dello chef\n`
-      } else if (backupOption === 'contact_me') {
-        msg += `Contattarmi prima di procedere\n`
-      } else if (backupIngredient) {
-        msg += `${backupIngredient.name}\n`
-      }
-      msg += `\n`
-    }
-    
-    // Allergie
-    if (selectedAllergies.length > 0 || customAllergy) {
-      msg += `►  ALLERGIE: `
-      const allergiesList = [...selectedAllergies]
-      if (customAllergy) allergiesList.push(customAllergy)
-      msg += allergiesList.join(', ') + '\n\n'
-    }
-    
-    msg += `\n`
-    
-    // Sezione Cliente
-    msg += `══════════════════\n`
-    msg += `SEZIONE 3: CLIENTE\n`
-    msg += `══════════════════\n\n`
-    
-    msg += `➤ Nome: ${customerData.name} ${customerData.surname}\n\n`
-    
-    msg += `➤ Telefono: ${customerData.phone}\n\n`
-    
-    if (orderType === 'delivery') {
-      msg += `➤ Indirizzo: ${customerData.address} ${customerData.civic}, ${customerData.city}\n\n`
-      msg += `➤ Citofono: ${customerData.doorbell}\n\n`
-    }
-    
-    if (customerData.notesOrder) {
-      msg += `➤ Note: ${customerData.notesOrder}\n\n`
-    }
-    
-    msg += `➤ Modalità Pagamento: `
-    if (paymentMethod === 'cash') msg += `Contanti alla consegna\n`
-    else if (paymentMethod === 'card') msg += `Carta alla consegna (POS)\n`
-    else msg += `Già pagato\n`
-    
-    msg += `\n\n`
-    
-    // Sezione Riepilogo
-    msg += `══════════════════\n`
-    msg += `SEZIONE 4: RIEPILOGO\n`
-    msg += `══════════════════\n\n`
-    
-    msg += `➤ Bowl Regular: ${allBowls.filter(b => b.bowlType?.name === 'Regular').length}\n\n`
-    
-    msg += `➤ Bowl Piccole: ${allBowls.filter(b => b.bowlType?.name === 'Small').length}\n\n`
-    
-    msg += `➤ Bowl Grandi: ${allBowls.filter(b => b.bowlType?.name === 'Large').length}\n\n`
-    
-    if (orderType === 'delivery' && selectedZone) {
-      msg += `➤ Consegna a Domicilio: ${selectedZone.name} (€${parseFloat(selectedZone.delivery_fee).toFixed(2)})\n\n`
-    } else {
-      msg += `➤ Consegna a Domicilio: No\n\n`
-    }
-    
-    msg += `➤ Consegna al Piano: ${wantsFloorDelivery ? 'Sì' : 'No'}\n\n`
-    
-    msg += `➤ Posate Richieste: ${wantsCutlery ? `Sì (${allBowls.length} set)` : 'No'}\n\n`
-    
-    msg += `➤ Mancia al Rider: ${tipAmount > 0 ? `Sì - €${tipAmount.toFixed(2)}` : 'No'}\n\n`
-    
-    msg += `\n`
-    msg += `━━━━━━━━━━━━━━━━━━\n`
-    const total = calculateTotal()
-msg += `\n→ TOTALE: €${total.toFixed(2)}\n`
-    msg += `━━━━━━━━━━━━━━━━━━\n\n\n`
-    
-    msg += `\n➤ Grazie per aver scelto ${restaurant.name}!\n`
-msg += `Powered by Ordini-Lampo.it\n`
-    
-    return msg
-  }
   const sendWhatsAppOrder = async () => {
-    const message = generateWhatsAppMessage()
-    const whatsappUrl = `https://wa.me/${restaurant.whatsapp_number}?text=${encodeURIComponent(message)}`
-    
-    // 🛡️ VALVOLA SICUREZZA: Blocca ordini troppo lunghi per WhatsApp
-    const encodedLength = encodeURIComponent(message).length
-    if (encodedLength > 8000) {
-      alert("► L'ordine è troppo lungo per WhatsApp!\n\nPer favore:\n1. Riduci le note ordine\n2. Oppure dividi in due ordini separati\n\nGrazie!")
-      return // NON aprire WhatsApp
+    if (!restaurant?.id) return
+
+    const payload = {
+      restaurant_id: restaurant.id,
+      // 🛡️ PATCH 1: Session key SAFE
+      session_key: getSessionKeySafe(),
+      // 🛡️ PATCH 2: Dedup key STABILE (anti doppio ordine)
+      client_dedup_key: checkoutDedupKey || newDedupKey(),
+      order_type: orderType,
+      selected_slot: selectedSlot,
+      customer_data: customerData,
+      cart_payload: {
+        bowls,
+        selectedBowlType,
+        selectedBases,
+        isHalfHalf,
+        selectedProteins,
+        selectedIngredients,
+        selectedSauces,
+        selectedToppings,
+        selectedBeverages,
+        backupOption,
+        backupIngredient,
+        selectedAllergies,
+        customAllergy,
+        wantsCutlery,
+        wantsFloorDelivery,
+        tipAmount,
+        appliedDiscount,
+        paymentMethod,
+        selectedZone,
+      },
+      client_totals: {
+        total: calculateTotal(),
+        subtotal: calculateSubtotal(),
+        delivery_fee: orderType === "delivery" && selectedZone ? Number(selectedZone.delivery_fee || 0) : 0,
+        discount_amount: appliedDiscount?.discount_value || 0,
+      },
     }
-    
-    // Salva ordine in database
+
     try {
-      // Salva/aggiorna cliente
-      const { data: customerRecord } = await supabase
-        .from('customers')
-        .upsert({
-          restaurant_id: restaurant.id,
-          phone: customerData.phone,
-          name: customerData.name,
-          surname: customerData.surname,
-          default_address: customerData.address,
-          default_city: customerData.city,
-          default_civic: customerData.civic,
-          default_doorbell: customerData.doorbell,
-          allergies: selectedAllergies,
-          last_order_data: {
-            bowlType: selectedBowlType,
-            bases: selectedBases,
-            proteins: selectedProteins,
-            ingredients: selectedIngredients,
-            sauces: selectedSauces,
-            toppings: selectedToppings
-          }
-        }, { 
-          onConflict: 'restaurant_id,phone',
-          ignoreDuplicates: false 
-        })
-        .select()
-        .single()
-      
-      // Salva in localStorage per ordini futuri
-      localStorage.setItem(`ordinlampo_phone_${restaurant.id}`, customerData.phone)
-      
-      // Incrementa contatore slot
-      if (selectedSlot) {
-  // Fix: gestisce correttamente sia Date object che stringhe
-  const slotDate = typeof selectedSlot === 'object' && selectedSlot.date
-    ? (selectedSlot.date instanceof Date 
-        ? selectedSlot.date.toISOString().split('T')[0]
-        : selectedSlot.date) // Se è già una stringa, usala direttamente
-    : new Date().toISOString().split('T')[0]
-    
-  const slotTime = typeof selectedSlot === 'object'
-    ? selectedSlot.time
-    : selectedSlot
-          
-        await supabase.rpc('increment_slot_count', {
-          p_restaurant_id: restaurant.id,
-          p_slot_date: slotDate,
-          p_slot_time: slotTime
-        })
+      const response = await fetch(SUPABASE_URL + "/functions/v1/finalize-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + SUPABASE_ANON,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error("Finalize order error:", result)
+        alert("Errore durante l'invio dell'ordine. Riprova.")
+        return
       }
-      
+
+      // Salva telefono per ordini futuri
+      localStorage.setItem("ordinlampo_phone_" + restaurant.id, customerData.phone)
+
+      // Track analytics (fire-and-forget)
+      trackWhatsAppClick(restaurant.id, calculateTotal())
+
+      // Apri WhatsApp con URL dal server
+      window.open(result.whatsapp_url, "_blank")
+
     } catch (err) {
-      console.error('Errore salvataggio ordine:', err)
+      console.error("Errore invio ordine:", err)
+      alert("Errore di connessione. Controlla la tua rete e riprova.")
     }
-    
-      // Apri WhatsApp
-    trackWhatsAppClick(restaurant.id, calculateTotal())
-    window.open(whatsappUrl, '_blank')
-    
-    // Mostra feedback dopo 1 secondo
-    setTimeout(() => setShowFeedback(true), 1000)
   }
 
   // ============================================
@@ -1100,10 +863,9 @@ msg += `Powered by Ordini-Lampo.it\n`
       )}
 
       {/* Main Content */}
-      <main className={`max-w-lg mx-auto ${currentStep > 0 ? 'pb-32' : ''}`}>
+      <main className={"max-w-lg mx-auto " + (currentStep > 0 ? "pb-32" : "")}>
         {CurrentStepComponent && (
           <CurrentStepComponent
-            // Dati ristorante
             restaurant={restaurant}
             settings={settings}
             locations={locations}
@@ -1113,13 +875,11 @@ msg += `Powered by Ordini-Lampo.it\n`
             openingHours={openingHours}
             discountCodes={discountCodes}
             
-            // Stato ordine
             orderType={orderType}
             setOrderType={setOrderType}
             selectedZone={selectedZone}
             setSelectedZone={setSelectedZone}
             
-            // Bowl
             bowls={bowls}
             currentBowlIndex={currentBowlIndex}
             selectedBowlType={selectedBowlType}
@@ -1137,17 +897,14 @@ msg += `Powered by Ordini-Lampo.it\n`
             selectedToppings={selectedToppings}
             setSelectedToppings={setSelectedToppings}
             
-            // Bevande
             selectedBeverages={selectedBeverages}
             setSelectedBeverages={setSelectedBeverages}
             
-            // Backup
             backupOption={backupOption}
             setBackupOption={setBackupOption}
             backupIngredient={backupIngredient}
             setBackupIngredient={setBackupIngredient}
             
-            // Allergie
             selectedAllergies={selectedAllergies}
             setSelectedAllergies={setSelectedAllergies}
             customAllergy={customAllergy}
@@ -1157,17 +914,14 @@ msg += `Powered by Ordini-Lampo.it\n`
             specificIngredient2={specificIngredient2}
             setSpecificIngredient2={setSpecificIngredient2}
             
-            // Fascia oraria
             selectedSlot={selectedSlot}
             setSelectedSlot={setSelectedSlot}
             
-            // Dati cliente
             customerData={customerData}
             setCustomerData={setCustomerData}
             previousCustomer={previousCustomer}
             previousOrder={previousOrder}
             
-            // Extras
             wantsCutlery={wantsCutlery}
             setWantsCutlery={setWantsCutlery}
             wantsFloorDelivery={wantsFloorDelivery}
@@ -1175,15 +929,12 @@ msg += `Powered by Ordini-Lampo.it\n`
             tipAmount={tipAmount}
             setTipAmount={setTipAmount}
             
-            // Sconto
             appliedDiscount={appliedDiscount}
             setAppliedDiscount={setAppliedDiscount}
             
-            // Pagamento
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
             
-            // Funzioni
             toggleIngredient={toggleIngredient}
             toggleDoublePortions={toggleDoublePortions}
             calculateBowlPrice={calculateBowlPrice}
@@ -1193,13 +944,11 @@ msg += `Powered by Ordini-Lampo.it\n`
             editBowl={editBowl}
             deleteBowl={deleteBowl}
             
-            // Navigazione
             nextStep={nextStep}
             prevStep={prevStep}
             goToStep={goToStep}
             activeSteps={activeSteps}
             
-            // Conferma
             setShowUnifiedCheckout={setShowUnifiedCheckout}
           />
         )}
