@@ -1,5 +1,34 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './lib/supabase'
+
+
+// Componenti Stepimport ClosedScreen from './components/ClosedScreen'
+import Welcome from './components/Welcome'
+import OrderType from './components/OrderType'
+import DeliveryZone from './components/DeliveryZone'
+import BowlSize from './components/BowlSize'
+import BaseSelection from './components/BaseSelection'
+import ProteinSelection from './components/ProteinSelection'
+import IngredientsSelection from './components/IngredientsSelection'
+import SauceSelection from './components/SauceSelection'
+import ToppingSelection from './components/ToppingSelection'
+import BeveragesSelection from './components/BeveragesSelection'
+import BackupIngredient from './components/BackupIngredient'
+import AllergiesSelection from './components/AllergiesSelection'
+import TimeSlot from './components/TimeSlot'
+import CustomerData from './components/CustomerData'
+import ExtrasSelection from './components/ExtrasSelection'
+import DiscountCode from './components/DiscountCode'
+import PaymentMethod from './components/PaymentMethod'
+import OrderSummary from './components/OrderSummary'
+import UnifiedCheckoutPopup from './components/UnifiedCheckoutPopup'
+
+// Componenti UI
+import LiveSummary from './components/LiveSummary'
+import StepIndicator from './components/StepIndicator'
+import LoadingScreen from './components/LoadingScreen'
+import ErrorScreen from './components/ErrorScreen'
+import ClosedScreen from './components/ClosedScreen'
 // ============================================
 // 📊 ANALYTICS TRACKING (Bulldozer)
 // ============================================
@@ -41,34 +70,6 @@ async function sendAnalyticsEvent(params) {
     }
   } catch (e) { console.warn("Analytics error", e) }
 }
-
-// Componenti Step
-import Welcome from './components/Welcome'
-import OrderType from './components/OrderType'
-import DeliveryZone from './components/DeliveryZone'
-import BowlSize from './components/BowlSize'
-import BaseSelection from './components/BaseSelection'
-import ProteinSelection from './components/ProteinSelection'
-import IngredientsSelection from './components/IngredientsSelection'
-import SauceSelection from './components/SauceSelection'
-import ToppingSelection from './components/ToppingSelection'
-import BeveragesSelection from './components/BeveragesSelection'
-import BackupIngredient from './components/BackupIngredient'
-import AllergiesSelection from './components/AllergiesSelection'
-import TimeSlot from './components/TimeSlot'
-import CustomerData from './components/CustomerData'
-import ExtrasSelection from './components/ExtrasSelection'
-import DiscountCode from './components/DiscountCode'
-import PaymentMethod from './components/PaymentMethod'
-import OrderSummary from './components/OrderSummary'
-import UnifiedCheckoutPopup from './components/UnifiedCheckoutPopup'
-
-// Componenti UI
-import LiveSummary from './components/LiveSummary'
-import StepIndicator from './components/StepIndicator'
-import LoadingScreen from './components/LoadingScreen'
-import ErrorScreen from './components/ErrorScreen'
-import ClosedScreen from './components/ClosedScreen'
 
 function App() {
   // ============================================
