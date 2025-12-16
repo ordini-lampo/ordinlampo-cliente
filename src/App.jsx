@@ -366,7 +366,10 @@ function App() {
       setLoading(true)
       
       const urlParams = new URLSearchParams(window.location.search)
-      const slug = (urlParams.get('r') || 'pokenjoy-sanremo').trim()
+  const slug = urlParams.get('r')?.trim()
+if (!slug) {
+  throw new Error("URL non valido. Usa ?r=nome-ristorante")
+}
       
       const res = await fetch(
         SUPABASE_URL + "/functions/v1/get-restaurant-bundle?slug=" + encodeURIComponent(slug),
