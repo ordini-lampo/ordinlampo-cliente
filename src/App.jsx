@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './lib/supabase'
+import { trackAppOpen, trackCheckoutStart, trackWhatsAppClick } from './lib/analytics'
 
 // Componenti Step
 import Welcome from './components/Welcome'
@@ -368,6 +369,7 @@ useEffect(() => {
       
       if (restaurantError) throw new Error('Ristorante non trovato')
       setRestaurant(restaurantData)
+      trackAppOpen(restaurantData.id)
       
       // Carica settings
       const { data: settingsData } = await supabase
@@ -1059,6 +1061,7 @@ msg += `Powered by Ordini-Lampo.it\n`
     }
     
       // Apri WhatsApp
+    trackWhatsAppClick(restaurant.id, calculateTotal())
     window.open(whatsappUrl, '_blank')
     
     // Mostra feedback dopo 1 secondo
