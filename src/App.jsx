@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './lib/supabase'
 
-
-// Componenti Stepimport ClosedScreen from './components/ClosedScreen'
+// Componenti Step
 import Welcome from './components/Welcome'
 import OrderType from './components/OrderType'
 import DeliveryZone from './components/DeliveryZone'
@@ -29,47 +28,6 @@ import StepIndicator from './components/StepIndicator'
 import LoadingScreen from './components/LoadingScreen'
 import ErrorScreen from './components/ErrorScreen'
 import ClosedScreen from './components/ClosedScreen'
-// ============================================
-// 📊 ANALYTICS TRACKING (Bulldozer)
-// ============================================
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-
-function getSessionKey() {
-  const k = localStorage.getItem("ol_session_key")
-  if (k) return k
-  const fresh = crypto.randomUUID() + crypto.randomUUID()
-  localStorage.setItem("ol_session_key", fresh)
-  return fresh
-}
-
-async function sendAnalyticsEvent(params) {
-  const { restaurantId, eventType, refCode, orderId, meta, fireAndForget } = params
-  if (!restaurantId || !SUPABASE_URL) return
-  const body = {
-    restaurant_id: restaurantId,
-    session_key: getSessionKey(),
-    event_type: eventType,
-    ref_code: refCode ?? null,
-    order_id: orderId ?? null,
-    event_dedup_key: `${eventType}:${getSessionKey()}:${Date.now()}`,
-    meta: meta ?? null,
-  }
-  try {
-    const req = fetch(`${SUPABASE_URL}/functions/v1/event-ingest`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify(body),
-      keepalive: true,
-    })
-    if (!fireAndForget) {
-      const res = await req
-      if (!res.ok) console.warn("Analytics failed", res.status)
-    }
-  } catch (e) { console.warn("Analytics error", e) }
-}
 
 function App() {
   // ============================================
@@ -298,14 +256,7 @@ useEffect(() => {
     localStorage.setItem("ordinlampo_payment", paymentMethod)
   }
 }, [paymentMethod])
-// 📊 Analytics: whatsapp_click
-    sendAnalyticsEvent({
-      restaurantId: restaurant.id,
-      eventType: 'whatsapp_click',
-      meta: { total: calculateTotal() },
-      fireAndForget: true
-    })
-window.open(whatsappUrl, '_blank')
+
   useEffect(() => {
     if (Object.keys(selectedBeverages).length > 0) {
       localStorage.setItem("ordinlampo_beverages", JSON.stringify(selectedBeverages))
@@ -317,16 +268,6 @@ window.open(whatsappUrl, '_blank')
       localStorage.setItem("ordinlampo_customer", JSON.stringify(customerData))
     }
   }, [customerData])
-  // 📊 Analytics: checkout_start
-  useEffect(() => {
-    if (showUnifiedCheckout && restaurant?.id) {
-      sendAnalyticsEvent({
-        restaurantId: restaurant.id,
-        eventType: 'checkout_start',
-        meta: { bowls_count: bowls.length }
-      })
-    }
-  }, [showUnifiedCheckout])
 
   // 🛡️ LOCAL STORAGE LOADER - Ripristina tutto al caricamento
 useEffect(() => {
@@ -427,13 +368,6 @@ useEffect(() => {
       
       if (restaurantError) throw new Error('Ristorante non trovato')
       setRestaurant(restaurantData)
-      // 📊 Analytics: app_open
-      sendAnalyticsEvent({
-        restaurantId: restaurantData.id,
-        eventType: 'app_open',
-        refCode: new URLSearchParams(window.location.search).get('ref'),
-        meta: { slug, path: window.location.pathname }
-      })
       
       // Carica settings
       const { data: settingsData } = await supabase
