@@ -400,24 +400,11 @@ if (!slug) {
       trackAppOpen(data.data.restaurant.id)
 
       try {
-        const availRes = await fetch(
-          WORKER_URL + "/poke/" + slug + "/slots",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              
-            },
-            body: JSON.stringify({
-              restaurant_id: data.data.restaurant.id,
-              start_date: new Date().toISOString().slice(0, 10),
-              end_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
-            })
-          }
-        )
-        const availData = await availRes.json()
+        const todayDate = new Date().toISOString().slice(0, 10);
+        const availRes = await fetch(WORKER_URL + "/poke/" + slug + "/slots?date=" + todayDate);
+        const availData = await availRes.json();
         if (availData?.availability) {
-          setSlotAvailability(availData.availability)
+          setSlotAvailability(availData.availability);
         }
       } catch (err) {
         console.log("Slot availability non disponibile:", err)

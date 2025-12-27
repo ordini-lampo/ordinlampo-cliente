@@ -127,16 +127,16 @@ export default function TimeSlot({
           ...slot,
           period,
           periodLabel,
-          available: true, // BULLDOZER: always available
-          orderCount: 0,
-          maxOrders: MAX_ORDERS_PER_SLOT,
+          available: slotAvailability?.[slot.value]?.available ?? true,
+          orderCount: slotAvailability?.[slot.value]?.count ?? 0,
+          maxOrders: slotAvailability?.[slot.value]?.limit ?? MAX_ORDERS_PER_SLOT,
           slotKey,
         });
       });
     });
 
     setTimeSlots(slots);
-  }, [todayData]);
+  }, [todayData, slotAvailability]);
 
   // Restore selectedTime from selectedSlot
   useEffect(() => {
