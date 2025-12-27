@@ -366,11 +366,7 @@ function App() {
       setLoading(true)
       
       const urlParams = new URLSearchParams(window.location.search)
-  const slug = urlParams.get('r')?.trim()
-if (!slug) {
-  throw new Error("URL non valido. Usa ?r=nome-ristorante")
-}
-      
+  const slug = urlParams.get('r')?.trim() || 'pokenjoy-demo'
       const res = await fetch(
         WORKER_URL + "/poke/" + encodeURIComponent(slug) + "/bundle",
         {
