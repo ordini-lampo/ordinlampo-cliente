@@ -538,7 +538,7 @@ if (!slug) {
   const calculateBeveragesPrice = useCallback(() => {
     let price = 0
     Object.entries(selectedBeverages).forEach(([ingredientId, quantity]) => {
-      const beverage = ingredients.find(i => i.id === parseInt(ingredientId))
+      const beverage = ingredients.find(i => i.id === ingredientId)
       if (beverage) {
         price += beverage.price * quantity
       }
