@@ -29,8 +29,8 @@ import LoadingScreen from './components/LoadingScreen'
 import ErrorScreen from './components/ErrorScreen'
 import ClosedScreen from './components/ClosedScreen'
 
-const WORKER_URL = 'https://ordini-lampo-api.ordini-lampo.workers.dev'
-// SUPABASE_ANON non più necessario - Worker pubblico
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 function getSessionKeySafe() {
   try {
@@ -144,9 +144,9 @@ function App() {
   const activeSteps = steps.filter(step => !step.condition || step.condition())
 
   useEffect(() => {
-    if (false) {
+    if (!SUPABASE_URL || !SUPABASE_ANON) {
       setError("Configurazione mancante. Contatta il supporto.")
-      // Worker URL hardcoded
+      console.error("MISSING ENV: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY")
     }
   }, [])
 
@@ -372,11 +372,11 @@ if (!slug) {
 }
       
       const res = await fetch(
-        WORKER_URL + "/poke/" + encodeURIComponent(slug) + "/bundle",
+        SUPABASE_URL + "/functions/v1/get-restaurant-bundle?slug=" + encodeURIComponent(slug),
         {
           method: "GET",
           headers: {
-            
+            "Authorization": "Bearer " + SUPABASE_ANON,
           },
         }
       )
@@ -387,29 +387,29 @@ if (!slug) {
         throw new Error(data?.error || "Errore caricamento ristorante")
       }
 
-      setRestaurant(data.data.restaurant)
-      setSettings(data.data.settings || {})
-      setLocations(data.data.locations || [])
-      setBowlTypes(data.data.bowl_types || [])
-      setCategories(data.data.categories || [])
-      setIngredients(data.data.ingredients || [])
-      setOpeningHours(data.data.opening_hours || [])
-      setSpecialClosures(data.data.special_closures || [])
-      setDiscountCodes(data.data.discount_codes || [])
+      setRestaurant(data.restaurant)
+      setSettings(data.settings || {})
+      setLocations(data.locations || [])
+      setBowlTypes(data.bowl_types || [])
+      setCategories(data.categories || [])
+      setIngredients(data.ingredients || [])
+      setOpeningHours(data.opening_hours || [])
+      setSpecialClosures(data.special_closures || [])
+      setDiscountCodes(data.discount_codes || [])
 
-      trackAppOpen(data.data.restaurant.id)
+      trackAppOpen(data.restaurant.id)
 
       try {
         const availRes = await fetch(
-          WORKER_URL + "/poke/" + slug + "/slots",
+          SUPABASE_URL + "/functions/v1/get-slot-availability",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              
+              "Authorization": "Bearer " + SUPABASE_ANON,
             },
             body: JSON.stringify({
-              restaurant_id: data.data.restaurant.id,
+              restaurant_id: data.restaurant.id,
               start_date: new Date().toISOString().slice(0, 10),
               end_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10)
             })
@@ -423,7 +423,7 @@ if (!slug) {
         console.log("Slot availability non disponibile:", err)
       }
 
-      loadPreviousCustomer(data.data.restaurant.id)
+      loadPreviousCustomer(data.restaurant.id)
       
     } catch (err) {
       console.error('Errore caricamento:', err)
@@ -444,11 +444,11 @@ if (!slug) {
         ...(savedPhoneHash ? { phone_hash: savedPhoneHash } : { phone: savedPhone }),
       }
 
-      const res = await fetch(WORKER_URL + "/poke/" + slug + "/customer", {
+      const res = await fetch(SUPABASE_URL + "/functions/v1/customer-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          
+          "Authorization": "Bearer " + SUPABASE_ANON,
         },
         body: JSON.stringify(body),
       })
@@ -674,52 +674,50 @@ if (!slug) {
   }
 
   const sendWhatsAppOrder = async () => {
-    const slug = new URLSearchParams(window.location.search).get('r')?.trim();
     if (!restaurant?.id) return
-    // Transform to Worker format
-    const customer_name = (customerData.name + " " + customerData.surname).trim();
-    const customer_phone = customerData.phone.startsWith("+") ? customerData.phone : "+39" + customerData.phone;
-    const delivery_address = customerData.address + " " + customerData.civic + ", " + customerData.city;
-    const delivery_time = selectedSlot?.time?.split("-")[0] || "19:00";
-    
-    // Build bowls array for Worker
-    const workerBowls = [{
-      bowl_type_id: selectedBowlType?.id,
-      bowl_type_name: selectedBowlType?.name || "Regular",
-      base: selectedBases.map(b => ({ name: b.name })),
-      proteine: selectedProteins.map(p => ({ name: p.name, qty: p.quantity || 1 })),
-      verdure: selectedIngredients.map(i => ({ name: i.name, qty: i.quantity || 1 })),
-      salse: selectedSauces.map(s => ({ name: s.name, qty: s.quantity || 1 })),
-      toppings: selectedToppings.map(t => ({ name: t.name, qty: t.quantity || 1 })),
-      extras_total: 0
-    }];
-    
-    // Allergie string
-    const allergieList = [...(selectedAllergies || []).map(a => a.name), customAllergy].filter(Boolean);
-    
+
     const payload = {
-      customer_name,
-      customer_phone,
-      delivery_address,
-      citofono: customerData.doorbell,
-      location_id: selectedZone?.id,
-      delivery_time,
-      delivery_date: selectedSlot?.dateKey,
-      payment_method: paymentMethod || "Contanti",
-      posate_richieste: wantsCutlery,
-      consegna_piano: wantsFloorDelivery,
-      allergie: allergieList.join(", "),
-      riserva: backupOption === "chef" ? "Lascia decidere allo chef" : backupIngredient?.name || "",
-      mancia: tipAmount,
-      note: customerData.notesOrder,
-      bowls: workerBowls
-    };
+      restaurant_id: restaurant.id,
+      session_key: getSessionKeySafe(),
+      client_dedup_key: checkoutDedupKey || newDedupKey(),
+      order_type: orderType,
+      selected_slot: selectedSlot,
+      customer_data: customerData,
+      cart_payload: {
+        bowls,
+        selectedBowlType,
+        selectedBases,
+        isHalfHalf,
+        selectedProteins,
+        selectedIngredients,
+        selectedSauces,
+        selectedToppings,
+        selectedBeverages,
+        backupOption,
+        backupIngredient,
+        selectedAllergies,
+        customAllergy,
+        wantsCutlery,
+        wantsFloorDelivery,
+        tipAmount,
+        appliedDiscount,
+        paymentMethod,
+        selectedZone,
+      },
+      client_totals: {
+        total: calculateTotal(),
+        subtotal: calculateSubtotal(),
+        delivery_fee: orderType === "delivery" && selectedZone ? Number(selectedZone.delivery_fee || 0) : 0,
+        discount_amount: appliedDiscount?.discount_value || 0,
+      },
+    }
+
     try {
-      const response = await fetch(WORKER_URL + "/poke/" + slug + "/order", {
+      const response = await fetch(SUPABASE_URL + "/functions/v1/finalize-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          
+          "Authorization": "Bearer " + SUPABASE_ANON,
         },
         body: JSON.stringify(payload),
       })
@@ -739,7 +737,7 @@ if (!slug) {
 
       trackWhatsAppClick(restaurant.id, calculateTotal())
 
-      window.open(result.whatsapp?.deeplink, "_blank")
+      window.open(result.whatsapp_url, "_blank")
 
     } catch (err) {
       console.error("Errore invio ordine:", err)

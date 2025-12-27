@@ -7,7 +7,7 @@ function BackupIngredient({
   setBackupIngredient,
   nextStep 
 }) {
-  const ingredientCategory = categories.find(c => c.name === 'ingredienti')
+  const ingredientCategory = categories.find(c => c.code === 'ingredienti')
   const availableIngredients = ingredients.filter(i => i.category_id === ingredientCategory?.id)
   
   return (

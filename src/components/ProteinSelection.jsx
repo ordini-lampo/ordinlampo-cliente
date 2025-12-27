@@ -5,7 +5,7 @@ function ProteinSelection({
   setSelectedProteins,
   nextStep 
 }) {
-  const proteinCategory = categories.find(c => c.name === 'proteine')
+  const proteinCategory = categories.find(c => c.code === 'proteine')
   const proteinIngredients = ingredients.filter(i => i.category_id === proteinCategory?.id)
   
   const maxProteins = proteinCategory?.max_selections || 2

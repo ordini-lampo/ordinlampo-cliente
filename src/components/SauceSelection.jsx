@@ -5,7 +5,7 @@ function SauceSelection({
   setSelectedSauces,
   nextStep 
 }) {
-  const sauceCategory = categories.find(c => c.name === 'salse')
+  const sauceCategory = categories.find(c => c.code === 'salse')
   const saucesList = ingredients.filter(i => i.category_id === sauceCategory?.id)
   
   const maxSauces = sauceCategory?.max_selections || 2

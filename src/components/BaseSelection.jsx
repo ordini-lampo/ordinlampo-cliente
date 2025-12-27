@@ -7,7 +7,7 @@ function BaseSelection({
   setIsHalfHalf,
   nextStep 
 }) {
-  const baseCategory = categories.find(c => c.name === 'base')
+  const baseCategory = categories.find(c => c.code === 'base')
   const baseIngredients = ingredients.filter(i => i.category_id === baseCategory?.id)
   
   const maxBases = isHalfHalf ? 2 : 1
@@ -38,7 +38,7 @@ function BaseSelection({
       </h2>
       
       {/* Toggle 50/50 - SUPER VISIBILE */}
-      {baseCategory?.allow_half_half && (
+      {true && (
         <div className={`mb-6 p-4 rounded-xl border-4 shadow-lg transition-all ${
           isHalfHalf 
             ? 'bg-gradient-to-r from-green-50 to-green-100 border-green-500' 

@@ -5,7 +5,7 @@ function ToppingSelection({
   setSelectedToppings,
   nextStep 
 }) {
-  const toppingCategory = categories.find(c => c.name === 'topping')
+  const toppingCategory = categories.find(c => c.code === 'topping')
   const toppingsList = ingredients.filter(i => i.category_id === toppingCategory?.id)
   
   const maxToppings = toppingCategory?.max_selections || 2

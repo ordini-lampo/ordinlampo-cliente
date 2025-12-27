@@ -73,14 +73,14 @@ function OrderSummary({
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
       
-      const isToday = selectedSlot.date.toDateString() === today.toDateString()
-      const isTomorrow = selectedSlot.date.toDateString() === tomorrow.toDateString()
+      const isToday = selectedSlot?.dateString || "" === today.toDateString()
+      const isTomorrow = selectedSlot?.dateString || "" === tomorrow.toDateString()
       
       let dayLabel = selectedSlot.dayName
       if (isToday) dayLabel = 'Oggi'
       if (isTomorrow) dayLabel = 'Domani'
       
-      return `${dayLabel}, ${selectedSlot.dateString} - ${selectedSlot.timeLabel}`
+      return `${dayLabel}, ${selectedSlot?.dateStringString} - ${selectedSlot.timeLabel}`
     }
     
     return selectedSlot

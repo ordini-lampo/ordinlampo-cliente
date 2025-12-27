@@ -5,7 +5,7 @@ function IngredientsSelection({
   setSelectedIngredients,
   nextStep 
 }) {
-  const ingredientCategory = categories.find(c => c.name === 'ingredienti')
+  const ingredientCategory = categories.find(c => c.code === 'ingredienti')
   const ingredientsList = ingredients.filter(i => i.category_id === ingredientCategory?.id)
   
   const maxIngredients = ingredientCategory?.max_selections || 4

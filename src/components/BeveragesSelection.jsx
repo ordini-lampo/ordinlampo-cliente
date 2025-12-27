@@ -5,8 +5,8 @@ function BeveragesSelection({
   setSelectedBeverages,
   nextStep 
 }) {
-  const nonAlcoholicCategory = categories.find(c => c.name === 'bevande_analcoliche')
-  const alcoholicCategory = categories.find(c => c.name === 'bevande_alcoliche')
+  const nonAlcoholicCategory = categories.find(c => c.code === 'bevande_analcoliche')
+  const alcoholicCategory = categories.find(c => c.code === 'bevande_alcoliche')
   
   const nonAlcoholicList = ingredients.filter(i => i.category_id === nonAlcoholicCategory?.id)
   const alcoholicList = ingredients.filter(i => i.category_id === alcoholicCategory?.id)
