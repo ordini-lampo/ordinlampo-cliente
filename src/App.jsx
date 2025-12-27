@@ -657,7 +657,7 @@ function App() {
   }
 
   const sendWhatsAppOrder = async () => {
-    const slug = new URLSearchParams(window.location.search).get('r')?.trim();
+    const slug = new URLSearchParams(window.location.search).get('r')?.trim() || 'pokenjoy-demo';
     if (!restaurant?.id) return
     // Transform to Worker format
     const customer_name = (customerData.name + " " + customerData.surname).trim();
